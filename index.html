@@ -3,1425 +3,1485 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ChipTrace — Semiconductor Inspection Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<title>SemiTrace — Semiconductor Manufacturing & Inspection Technology</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f7f5f0;--bg2:#eeebe3;--bg3:#e4e1d8;
-  --surface:#ffffff;--ink:#1c1c18;--ink2:#52524e;--ink3:#9a9990;
-  --red:#b83a0a;--red-l:#fbe9e1;
-  --blue:#1a4f7a;--blue-l:#e1ecf5;
-  --green:#1a5e35;--green-l:#e1f0e8;
-  --amber:#92560a;--amber-l:#fdf0d8;
-  --purple:#4a1a7a;--purple-l:#ede1f5;
-  --border:#dddad0;
+  --bg:#f6f4ef;--bg2:#edeae2;--bg3:#e3e0d6;
+  --surf:#fff;--ink:#1a1a16;--ink2:#54524d;--ink3:#9e9b94;
+  --red:#c23b0c;--red-l:#fbeae2;
+  --blue:#184c78;--blue-l:#e0ebf5;
+  --green:#18572f;--green-l:#e0ede5;
+  --amber:#8a5008;--amber-l:#fdefd6;
+  --purple:#3e1672;--purple-l:#ece1f5;
+  --teal:#0e5c5c;--teal-l:#ddf0f0;
+  --border:#dedad0;
   --mono:'IBM Plex Mono',monospace;
-  --serif:'Instrument Serif',serif;
-  --sans:'Instrument Sans',sans-serif;
+  --serif:'Fraunces',serif;
+  --sans:'DM Sans',sans-serif;
   --r:10px;
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
 
-/* ─── NAV ─── */
+/* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:300;height:56px;
-  background:rgba(247,245,240,.94);backdrop-filter:blur(18px);
+  background:rgba(246,244,239,.95);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 5vw;}
-.logo{font-family:var(--mono);font-weight:600;font-size:.95rem;color:var(--ink);text-decoration:none;
-  display:flex;align-items:center;gap:.5rem}
-.logo-sq{width:20px;height:20px;background:var(--red);border-radius:4px;
-  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:3px}
-.logo-sq span{background:#fff;border-radius:1px;display:block}
-.nav-items{display:flex;gap:0;list-style:none}
-.nav-items a{color:var(--ink2);text-decoration:none;font-size:.78rem;font-weight:500;
-  padding:.4rem .7rem;border-radius:5px;transition:all .15s;white-space:nowrap}
-.nav-items a:hover{background:var(--bg2);color:var(--ink)}
-.nav-items a.active{color:var(--red)}
+  display:flex;align-items:center;justify-content:space-between;padding:0 5vw}
+.logo{font-family:var(--mono);font-weight:600;font-size:.93rem;color:var(--ink);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem}
+.logo-icon{width:20px;height:20px;border-radius:4px;background:var(--red);
+  display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:11px;height:11px}
+.nav-pills{display:flex;gap:0;list-style:none;overflow-x:auto}
+.nav-pills a{color:var(--ink3);text-decoration:none;font-size:.75rem;font-weight:500;
+  padding:.36rem .68rem;border-radius:5px;transition:all .15s;white-space:nowrap;display:block}
+.nav-pills a:hover{background:var(--bg2);color:var(--ink)}
+.nav-pills a.on{color:var(--red);font-weight:600}
 .ham{display:none;flex-direction:column;gap:4px;cursor:pointer;border:none;background:none;padding:4px}
 .ham span{width:20px;height:1.5px;background:var(--ink);display:block}
 
-/* ─── PAGE LAYOUT ─── */
+/* ── PAGES ── */
 .page{display:none;min-height:100vh;padding-top:56px}
-.page.active{display:block}
-.container{max-width:1100px;margin:0 auto;padding:0 5vw}
+.page.on{display:block}
+.wrap{max-width:1080px;margin:0 auto;padding:0 5vw}
 
-/* ─── SECTION ─── */
-.sec{padding:5rem 0}
-.sec-alt{background:var(--bg2)}
-.sec-label{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--red);
-  letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;margin-bottom:.8rem}
-.sec-label::before{content:'';width:14px;height:1px;background:var(--red)}
-.sec-h{font-family:var(--serif);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:400;
-  letter-spacing:-.5px;line-height:1.15;margin-bottom:.75rem}
-.sec-sub{color:var(--ink2);font-size:.92rem;max-width:540px;line-height:1.75}
-.reveal{opacity:0;transform:translateY(24px);transition:all .6s cubic-bezier(.16,1,.3,1)}
-.reveal.in{opacity:1;transform:none}
+/* ── SHARED ── */
+.sec{padding:5rem 0}.sec-bg{background:var(--bg2)}
+.lbl{font-family:var(--mono);font-size:.67rem;font-weight:600;color:var(--red);
+  letter-spacing:.14em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:.45rem;margin-bottom:.8rem}
+.lbl::before{content:'';width:12px;height:1px;background:var(--red)}
+.sh{font-family:var(--serif);font-size:clamp(1.9rem,3.8vw,3rem);
+  font-weight:600;line-height:1.1;letter-spacing:-.5px;margin-bottom:.7rem}
+.sh em{font-style:italic;font-weight:300;color:var(--red)}
+.sd{color:var(--ink2);font-size:.92rem;max-width:530px;line-height:1.8}
+.rv{opacity:0;transform:translateY(22px);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.rv.in{opacity:1;transform:none}
 
-/* ─── HOME ─── */
-#home-hero{min-height:calc(100vh - 56px);display:flex;align-items:center;
-  background:var(--bg);position:relative;overflow:hidden;padding:4rem 5vw 3rem}
-.home-grid-bg{position:absolute;inset:0;
+/* ══════════════════════════════════════
+   3D VISUALS — CSS/SVG Animated
+══════════════════════════════════════ */
+
+/* ─ WAFER 3D ─ */
+.wafer3d-scene{width:260px;height:260px;perspective:700px;margin:0 auto;cursor:grab}
+.wafer3d{width:100%;height:100%;transform-style:preserve-3d;
+  animation:waferSpin 14s linear infinite;position:relative}
+.wafer3d-scene:hover .wafer3d{animation-play-state:paused}
+@keyframes waferSpin{from{transform:rotateX(20deg) rotateY(0deg)}to{transform:rotateX(20deg) rotateY(360deg)}}
+.wlayer{position:absolute;left:50%;top:50%;border-radius:50%;
+  transform-style:preserve-3d;transform:translateX(-50%) translateY(-50%)}
+.wl0{width:220px;height:220px;background:radial-gradient(ellipse at 35% 35%,#e8e4dc,#b8b4a8);
+  border:1px solid #9a9890;box-shadow:0 4px 20px rgba(0,0,0,.2);transform:translateX(-50%) translateY(-50%) translateZ(0px)}
+.wl1{width:200px;height:200px;transform:translateX(-50%) translateY(-50%) translateZ(2px);
+  background:repeating-conic-gradient(rgba(80,70,60,.07) 0deg 2deg,transparent 2deg 4deg);border-radius:50%}
+.wl2{width:200px;height:200px;transform:translateX(-50%) translateY(-50%) translateZ(4px);
+  background:linear-gradient(45deg,rgba(100,90,80,.06) 25%,transparent 25%,transparent 75%,rgba(100,90,80,.06) 75%),
+             linear-gradient(45deg,rgba(100,90,80,.06) 25%,transparent 25%,transparent 75%,rgba(100,90,80,.06) 75%);
+  background-size:18px 18px;background-position:0 0,9px 9px;border-radius:50%}
+.wl3{width:190px;height:190px;transform:translateX(-50%) translateY(-50%) translateZ(7px);
+  border-radius:50%;overflow:hidden;background:transparent}
+.wdie-grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(8,1fr);gap:1px;padding:8px}
+.wdie{border-radius:1px;transition:opacity .3s}
+.wdie.good{background:rgba(24,87,47,.35)}
+.wdie.def{background:rgba(194,59,12,.6)}
+.wdie.edge{background:transparent}
+/* notch */
+.wnotch{position:absolute;bottom:-3px;left:50%;transform:translateX(-50%);
+  width:12px;height:6px;background:var(--bg3);border-radius:0 0 6px 6px;z-index:10}
+/* wafer label */
+.wafer3d-label{text-align:center;margin-top:.8rem;font-family:var(--mono);font-size:.68rem;color:var(--ink3)}
+
+/* ─ TRANSISTOR 3D ─ */
+.trans3d-wrap{width:280px;margin:0 auto}
+.trans3d-scene{width:280px;height:220px;perspective:800px;cursor:grab}
+.trans3d{width:100%;height:100%;transform-style:preserve-3d;
+  animation:transRock 10s ease-in-out infinite;position:relative}
+@keyframes transRock{0%,100%{transform:rotateX(25deg) rotateY(-20deg)}50%{transform:rotateX(20deg) rotateY(15deg)}}
+.trans3d-scene:hover .trans3d{animation-play-state:paused}
+
+/* substrate */
+.t3-sub{position:absolute;left:30px;top:160px;width:220px;height:28px;
+  transform-style:preserve-3d;background:#a8b8c8;
+  border:1px solid #8898a8;border-radius:2px;
+  box-shadow:0 4px 16px rgba(0,0,0,.25)}
+/* fin */
+.t3-fin{position:absolute;left:110px;top:80px;width:60px;height:84px;
+  background:linear-gradient(to right,#6080a0,#8090c0,#6080a0);
+  border:1px solid #5070a0;
+  transform-style:preserve-3d;border-radius:2px 2px 0 0}
+/* gate dielectric */
+.t3-ox{position:absolute;left:90px;top:118px;width:100px;height:12px;
+  background:linear-gradient(to bottom,rgba(255,180,80,.7),rgba(255,200,100,.5));
+  border:1px solid rgba(255,160,60,.5);border-radius:2px}
+/* gate metal */
+.t3-gate{position:absolute;left:88px;top:100px;width:104px;height:22px;
+  background:linear-gradient(to bottom,#888,#bbb,#888);
+  border:1px solid #666;border-radius:3px 3px 0 0}
+/* source / drain labels */
+.t3-sd{position:absolute;font-family:var(--mono);font-size:.62rem;font-weight:600;color:var(--blue)}
+/* spacers */
+.t3-sp{position:absolute;width:12px;height:22px;background:#c8d0d8;border:1px solid #a8b0b8;top:100px}
+/* contact plugs */
+.t3-plug{position:absolute;width:10px;background:linear-gradient(to bottom,#c8c8c8,#a0a0a0);border-radius:1px 1px 0 0}
+/* labels */
+.trans3d-labels{display:flex;justify-content:space-around;margin-top:.5rem;
+  font-family:var(--mono);font-size:.62rem;color:var(--ink3)}
+
+/* ─ LAYER STACK 3D ─ */
+.stack3d-scene{width:300px;height:280px;perspective:900px;margin:0 auto;cursor:grab}
+.stack3d{width:100%;height:100%;transform-style:preserve-3d;
+  animation:stackTilt 12s ease-in-out infinite;position:relative}
+@keyframes stackTilt{0%,100%{transform:rotateX(35deg) rotateY(-15deg)}50%{transform:rotateX(30deg) rotateY(20deg)}}
+.stack3d-scene:hover .stack3d{animation-play-state:paused}
+.slayer{position:absolute;left:30px;width:240px;height:20px;
+  transform-style:preserve-3d;border-radius:3px;border:1px solid rgba(0,0,0,.15)}
+.slayer-label{position:absolute;right:-5px;top:50%;transform:translateY(-50%) translateX(100%);
+  font-family:var(--mono);font-size:.6rem;color:var(--ink3);white-space:nowrap;padding-left:6px}
+
+/* ─ LITHOGRAPHY 3D ─ */
+.litho3d-scene{width:260px;height:220px;perspective:700px;margin:0 auto;cursor:grab}
+.litho3d{width:100%;height:100%;transform-style:preserve-3d;
+  animation:lithoFloat 9s ease-in-out infinite;position:relative}
+@keyframes lithoFloat{0%,100%{transform:rotateX(28deg) rotateY(-10deg)}50%{transform:rotateX(22deg) rotateY(18deg)}}
+.litho3d-scene:hover .litho3d{animation-play-state:paused}
+.lbox{position:absolute;border-radius:3px;transform-style:preserve-3d}
+
+/* EUV beam animation */
+@keyframes beamPulse{0%,100%{opacity:.5;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.05)}}
+.euv-beam{animation:beamPulse 2s ease-in-out infinite}
+
+/* GAA 3D */
+.gaa3d-scene{width:280px;height:200px;perspective:700px;margin:0 auto;cursor:grab}
+.gaa3d{transform-style:preserve-3d;animation:gaaRock 11s ease-in-out infinite;
+  width:100%;height:100%;position:relative}
+@keyframes gaaRock{0%,100%{transform:rotateX(22deg) rotateY(-15deg)}50%{transform:rotateX(18deg) rotateY(20deg)}}
+.gaa3d-scene:hover .gaa3d{animation-play-state:paused}
+.nsheet{position:absolute;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+.gate-wrap{position:absolute;transform-style:preserve-3d}
+
+/* ── HOME HERO ── */
+#h-hero{min-height:calc(100vh - 56px);display:flex;align-items:center;
+  padding:4rem 5vw 3rem;position:relative;overflow:hidden}
+.h-grid{position:absolute;inset:0;
   background-image:linear-gradient(var(--border) 1px,transparent 1px),
     linear-gradient(90deg,var(--border) 1px,transparent 1px);
-  background-size:48px 48px;opacity:.35;
-  mask-image:radial-gradient(ellipse 70% 70% at 40% 50%,black,transparent)}
-.home-inner{position:relative;z-index:1;max-width:680px}
-.home-eyebrow{font-family:var(--mono);font-size:.7rem;font-weight:500;color:var(--red);
-  letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:.6rem;
-  margin-bottom:1.4rem}
-.home-eyebrow::after{content:'';flex:1;max-width:48px;height:1px;background:var(--red)}
-.home-h1{font-family:var(--serif);font-size:clamp(3rem,6vw,5rem);
-  font-weight:400;line-height:1.05;letter-spacing:-1.5px;margin-bottom:1.2rem}
-.home-h1 em{font-style:italic;color:var(--red)}
-.home-desc{color:var(--ink2);font-size:1rem;line-height:1.8;max-width:520px;margin-bottom:2.2rem}
-.home-btns{display:flex;gap:.75rem;flex-wrap:wrap}
-.btn-red{background:var(--red);color:#fff;padding:.7rem 1.6rem;border-radius:6px;
+  background-size:44px 44px;opacity:.38;
+  mask-image:radial-gradient(ellipse 80% 80% at 35% 50%,black,transparent)}
+.h-inner{position:relative;z-index:1;max-width:640px}
+.h-right{position:absolute;right:4vw;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:1.5rem;align-items:center}
+.h-eye{font-family:var(--mono);font-size:.67rem;color:var(--red);letter-spacing:.14em;
+  text-transform:uppercase;display:flex;align-items:center;gap:.55rem;margin-bottom:1.4rem}
+.h-eye::after{content:'';width:36px;height:1px;background:var(--red)}
+.h-h1{font-family:var(--serif);font-size:clamp(2.8rem,6vw,4.8rem);
+  font-weight:600;line-height:1.04;letter-spacing:-1.5px;margin-bottom:1.1rem}
+.h-h1 em{font-style:italic;font-weight:300;color:var(--red)}
+.h-desc{color:var(--ink2);font-size:.97rem;line-height:1.82;max-width:540px;margin-bottom:2rem}
+.h-warn{display:inline-flex;align-items:center;gap:.55rem;
+  background:var(--red-l);border:1px solid rgba(194,59,12,.2);
+  color:var(--red);padding:.45rem .9rem;border-radius:6px;
+  font-family:var(--mono);font-size:.7rem;font-weight:500;margin-bottom:1.4rem}
+.h-btns{display:flex;gap:.65rem;flex-wrap:wrap}
+.btn-fill{background:var(--red);color:#fff;padding:.7rem 1.6rem;border-radius:6px;
   font-weight:600;font-size:.85rem;text-decoration:none;border:none;cursor:pointer;
   transition:all .2s;display:inline-block}
-.btn-red:hover{background:#9a2f06;transform:translateY(-1px)}
-.btn-ghost{background:none;border:1px solid var(--border);color:var(--ink);
+.btn-fill:hover{background:#a62f08;transform:translateY(-1px)}
+.btn-line{background:none;border:1px solid var(--border);color:var(--ink);
   padding:.7rem 1.6rem;border-radius:6px;font-weight:500;font-size:.85rem;
   text-decoration:none;transition:all .2s;display:inline-block;cursor:pointer}
-.btn-ghost:hover{border-color:var(--ink);background:var(--bg2)}
-.home-kpi{display:flex;gap:2.5rem;margin-top:3.5rem;flex-wrap:wrap}
-.kpi{border-left:2px solid var(--border);padding-left:.9rem}
-.kpi strong{font-family:var(--mono);font-size:1.5rem;font-weight:600;display:block;line-height:1}
-.kpi span{color:var(--ink3);font-size:.75rem;margin-top:.25rem;display:block}
-.home-chip-svg{position:absolute;right:4vw;top:50%;transform:translateY(-50%);
-  opacity:.08;pointer-events:none}
+.btn-line:hover{border-color:var(--ink);background:var(--bg2)}
+.h-kpis{display:flex;gap:2rem;margin-top:3rem;flex-wrap:wrap}
+.kpi{border-left:2px solid var(--border);padding-left:.8rem}
+.kpi strong{font-family:var(--mono);font-size:1.3rem;font-weight:600;display:block;line-height:1.1}
+.kpi span{color:var(--ink3);font-size:.71rem;margin-top:.2rem;display:block}
 
-/* WHY section cards */
-.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;margin-top:2.5rem}
-.why-card{background:var(--surface);padding:2rem 1.6rem;transition:background .2s}
-.why-card:hover{background:var(--bg)}
-.why-icon{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--red);
-  letter-spacing:.1em;margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
-.why-icon::before{content:'';width:7px;height:7px;background:var(--red);border-radius:1px}
-.why-card h3{font-size:.95rem;font-weight:600;margin-bottom:.4rem}
-.why-card p{color:var(--ink2);font-size:.82rem;line-height:1.7}
+/* scope strip */
+.scope-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:var(--border);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-top:2.2rem}
+.sc{background:var(--surf);padding:1.6rem 1.5rem}
+.sc-w{border-left:3px solid var(--red)}.sc-r{border-left:3px solid var(--green)}
+.sc-head{font-family:var(--mono);font-size:.67rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;
+  display:flex;align-items:center;gap:.4rem}
+.sc-w .sc-head{color:var(--red)}.sc-r .sc-head{color:var(--green)}
+.sc-list{list-style:none;display:flex;flex-direction:column;gap:.32rem}
+.sc-list li{font-size:.82rem;display:flex;align-items:start;gap:.45rem;color:var(--ink2)}
+.sc-list li::before{flex-shrink:0;margin-top:.12rem;font-size:.73rem}
+.sc-w .sc-list li::before{content:'✕';color:var(--red)}
+.sc-r .sc-list li::before{content:'✓';color:var(--green)}
 
-/* ─── PROCESS PAGE ─── */
-.proc-timeline{margin-top:3rem;position:relative}
-.proc-timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;
-  width:1px;background:linear-gradient(var(--red),var(--border));opacity:.4}
-.proc-step{display:grid;grid-template-columns:56px 1fr;gap:1.5rem;
-  margin-bottom:1rem;opacity:0;transform:translateX(-16px);
+/* why cards */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));
+  gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;margin-top:2rem}
+.wc{background:var(--surf);padding:1.6rem 1.4rem;transition:background .2s}
+.wc:hover{background:var(--bg)}
+.wc-tag{font-family:var(--mono);font-size:.63rem;font-weight:600;color:var(--red);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.85rem;
+  display:flex;align-items:center;gap:.35rem}
+.wc-tag::before{content:'';width:6px;height:6px;background:var(--red);border-radius:1px}
+.wc h3{font-size:.92rem;font-weight:600;margin-bottom:.38rem}
+.wc p{color:var(--ink2);font-size:.79rem;line-height:1.72}
+
+/* flow strip */
+.flow-strip{overflow-x:auto;margin-top:1.8rem;padding-bottom:.5rem}
+
+/* ── PROCESS ── */
+.ptl{position:relative;margin-top:2.5rem}
+.ptl::before{content:'';position:absolute;left:26px;top:0;bottom:0;
+  width:1px;background:linear-gradient(var(--red),transparent);opacity:.35}
+.pstep{display:grid;grid-template-columns:52px 1fr;gap:1.3rem;
+  margin-bottom:.85rem;opacity:0;transform:translateX(-12px);
   transition:all .55s cubic-bezier(.16,1,.3,1)}
-.proc-step.in{opacity:1;transform:none}
-.proc-dot{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-family:var(--mono);font-weight:600;font-size:.85rem;
-  border:1px solid var(--border);background:var(--surface);color:var(--ink2);
-  flex-shrink:0;z-index:1;position:relative}
-.proc-dot.active{background:var(--red);border-color:var(--red);color:#fff}
-.proc-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-  padding:1.75rem;transition:box-shadow .2s}
-.proc-body:hover{box-shadow:0 4px 20px rgba(0,0,0,.06)}
-.proc-tag{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--blue);
-  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
-.proc-body h3{font-size:1.05rem;font-weight:600;margin-bottom:.5rem}
-.proc-body p{color:var(--ink2);font-size:.85rem;line-height:1.75}
-.proc-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.9rem}
-.chip{font-family:var(--mono);font-size:.65rem;background:var(--bg2);
-  border:1px solid var(--border);color:var(--ink2);padding:.22rem .6rem;border-radius:3px}
+.pstep.in{opacity:1;transform:none}
+.pdot{width:52px;height:52px;border-radius:50%;border:1px solid var(--border);
+  background:var(--surf);color:var(--ink3);font-family:var(--mono);
+  font-weight:600;font-size:.8rem;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;z-index:1;position:relative}
+.pdot.a{background:var(--red);border-color:var(--red);color:#fff}
+.pbody{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;transition:box-shadow .2s}
+.pbody:hover{box-shadow:0 4px 18px rgba(0,0,0,.06)}
+.ptag{font-family:var(--mono);font-size:.63rem;font-weight:600;color:var(--blue);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.32rem}
+.pbody h3{font-size:1rem;font-weight:600;margin-bottom:.4rem}
+.pbody p{color:var(--ink2);font-size:.83rem;line-height:1.78}
+.pchips{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.8rem}
+.pch{font-family:var(--mono);font-size:.62rem;background:var(--bg2);
+  border:1px solid var(--border);color:var(--ink3);padding:.18rem .52rem;border-radius:3px}
+.proc-diagram{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:1rem;margin-top:1rem;overflow-x:auto}
+.pd-title{font-family:var(--mono);font-size:.63rem;color:var(--ink3);
+  letter-spacing:.06em;margin-bottom:.65rem}
+.pd-flow{display:flex;align-items:center;gap:.32rem;flex-wrap:wrap}
+.pd-box{font-family:var(--mono);font-size:.66rem;padding:.28rem .6rem;
+  border-radius:4px;white-space:nowrap;border:1px solid}
+.pd-arrow{color:var(--ink3);font-size:.68rem;font-family:var(--mono)}
 
-/* ─── INSPECTION PAGE ─── */
-.stage-tabs{display:flex;gap:.2rem;overflow-x:auto;padding-bottom:.3rem;
+/* process 3d visual section */
+.proc-visual-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1.5rem;margin-top:2.5rem}
+.pv-card{background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r);padding:1.5rem;text-align:center}
+.pv-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--ink2);
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:1.2rem;
+  display:flex;align-items:center;gap:.4rem;justify-content:center}
+.pv-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red)}
+.pv-desc{font-size:.78rem;color:var(--ink3);margin-top:.9rem;line-height:1.65;text-align:left}
+.hover-hint{font-family:var(--mono);font-size:.6rem;color:var(--ink3);
+  margin-top:.5rem;opacity:.7;text-align:center}
+
+/* ── INSPECTION ── */
+.stabs{display:flex;gap:.1rem;overflow-x:auto;padding-bottom:.3rem;
   border-bottom:1px solid var(--border);margin-bottom:2rem}
-.stab{font-family:var(--mono);font-size:.72rem;font-weight:500;
-  padding:.55rem 1rem;border:none;background:none;cursor:pointer;
+.stab{font-family:var(--mono);font-size:.69rem;font-weight:500;
+  padding:.48rem .9rem;border:none;background:none;cursor:pointer;
   color:var(--ink3);border-bottom:2px solid transparent;margin-bottom:-1px;
   transition:all .15s;white-space:nowrap}
 .stab.on{color:var(--red);border-bottom-color:var(--red)}
 .stab:hover:not(.on){color:var(--ink);background:var(--bg2);border-radius:6px 6px 0 0}
-.stage-panel{display:none}
-.stage-panel.on{display:block}
-.insp-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem}
-.def-col,.insp-col{background:var(--surface);border:1px solid var(--border);
+.spanel{display:none}.spanel.on{display:block}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1.2rem}
+.icol{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:1.3rem}
+.ch{font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:.85rem;display:flex;align-items:center;gap:.35rem}
+.ch::before{width:6px;height:6px;border-radius:50%;content:'';flex-shrink:0}
+.ch.d{color:var(--red)}.ch.d::before{background:var(--red)}
+.ch.i{color:var(--blue)}.ch.i::before{background:var(--blue)}
+.di{display:flex;align-items:start;gap:.5rem;padding:.48rem 0;
+  border-bottom:1px solid var(--border);font-size:.81rem}
+.di:last-child{border-bottom:none}
+.dd{width:5px;height:5px;border-radius:50%;background:var(--red);
+  flex-shrink:0;margin-top:.48rem}
+.di strong{display:block;font-weight:600;margin-bottom:.1rem;font-size:.84rem}
+.di p{color:var(--ink2);font-size:.77rem;line-height:1.64}
+.ii{padding:.48rem 0;border-bottom:1px solid var(--border);font-size:.81rem}
+.ii:last-child{border-bottom:none}
+.ii strong{font-weight:600;display:block;margin-bottom:.1rem;color:var(--blue);font-size:.84rem}
+.ii p{color:var(--ink2);font-size:.77rem;line-height:1.64}
+
+/* ── EQUIPMENT ── */
+.eqgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));
+  gap:1rem;margin-top:2rem}
+.eqcard{background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r);overflow:hidden;transition:all .22s}
+.eqcard:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,0,0,.07)}
+.eqh{padding:1.2rem 1.3rem .8rem;border-bottom:1px solid var(--border)}
+.eqabbr{font-family:var(--mono);font-weight:700;font-size:1.05rem;margin-bottom:.12rem}
+.eqname{font-size:.83rem;font-weight:600;color:var(--ink2)}
+.eqb{padding:1rem 1.3rem}
+.eqb p{color:var(--ink2);font-size:.79rem;line-height:1.7;margin-bottom:.75rem}
+.eqspec{display:flex;flex-direction:column;gap:.22rem}
+.eqrow{display:flex;justify-content:space-between;font-size:.73rem;
+  padding:.25rem 0;border-bottom:1px solid var(--border)}
+.eqrow:last-child{border-bottom:none}
+.eqrow span:first-child{color:var(--ink3);font-family:var(--mono);font-size:.65rem}
+.eqrow span:last-child{font-weight:500;color:var(--ink)}
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem;margin-top:.75rem}
+.pro,.con{padding:.5rem .65rem;border-radius:5px;font-size:.7rem;line-height:1.55}
+.pro{background:var(--green-l);color:var(--green)}
+.con{background:var(--red-l);color:var(--red)}
+.pro strong,.con strong{display:block;font-size:.6rem;font-family:var(--mono);
+  font-weight:700;letter-spacing:.07em;margin-bottom:.18rem;text-transform:uppercase}
+.ctw{overflow-x:auto;margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--r)}
+.ct{width:100%;border-collapse:collapse;font-size:.78rem}
+.ct th{background:var(--ink);color:#fff;font-family:var(--mono);font-size:.65rem;
+  font-weight:600;padding:.58rem .9rem;text-align:left;letter-spacing:.06em}
+.ct td{padding:.58rem .9rem;border-bottom:1px solid var(--border);vertical-align:top}
+.ct tr:last-child td{border-bottom:none}
+.ct tr:hover td{background:var(--bg)}
+.ct td:first-child{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--red)}
+
+/* ── DATA ── */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));
+  gap:.85rem;margin-top:.9rem}
+.fbox{background:var(--surf);border:1px solid var(--border);
+  border-left:3px solid var(--red);border-radius:0 var(--r) var(--r) 0;padding:1.1rem 1.3rem}
+.fbox h4{font-family:var(--mono);font-size:.67rem;font-weight:600;color:var(--red);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:.65rem}
+.fm{font-family:var(--mono);font-size:.86rem;background:var(--bg2);
+  border:1px solid var(--border);padding:.45rem .85rem;border-radius:5px;
+  margin-bottom:.38rem;letter-spacing:.02em}
+.fm em{color:var(--red);font-style:normal}
+.fd{font-size:.76rem;color:var(--ink3);line-height:1.62}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(305px,1fr));
+  gap:1.1rem;margin-top:1.8rem}
+.cc{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem}
+.ctitle{font-family:var(--mono);font-size:.67rem;font-weight:600;color:var(--ink2);
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:.9rem;
+  display:flex;align-items:center;gap:.38rem}
+.ctitle::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--red)}
+.cbox{height:195px;position:relative}
+.rvbar{display:flex;flex-direction:column;gap:.6rem;margin-top:1.2rem}
+.rbrow{display:flex;align-items:center;gap:.65rem}
+.rblabel{font-family:var(--mono);font-size:.67rem;color:var(--ink2);width:52px;flex-shrink:0}
+.rbwrap{flex:1;height:8px;background:var(--bg2);border-radius:5px;overflow:hidden}
+.rbbar{height:100%;border-radius:5px;transition:width 1.1s ease}
+.rbval{font-family:var(--mono);font-size:.67rem;color:var(--ink3);width:48px;text-align:right;flex-shrink:0}
+.wfmap{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;
+  padding:.85rem;background:var(--bg2);border-radius:8px;aspect-ratio:1;max-width:235px}
+.wfc{aspect-ratio:1;border-radius:50%;cursor:pointer;transition:opacity .2s}
+.wfc:hover{opacity:.7!important}
+.map-legend{display:flex;gap:.75rem;margin-top:.65rem;flex-wrap:wrap}
+.ml{font-family:var(--mono);font-size:.65rem;color:var(--ink3);
+  display:flex;align-items:center;gap:.28rem}
+.ml-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── PROJECTS (empty state) ── */
+.proj-empty{display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:5rem 2rem;
+  border:2px dashed var(--border);border-radius:var(--r);margin-top:2.5rem}
+.proj-empty-icon{width:64px;height:64px;border-radius:14px;
+  background:var(--bg2);display:flex;align-items:center;justify-content:center;
+  font-size:1.6rem;margin-bottom:1.2rem}
+.proj-empty h3{font-size:1.1rem;font-weight:600;margin-bottom:.5rem}
+.proj-empty p{color:var(--ink2);font-size:.87rem;max-width:380px;line-height:1.72}
+.proj-template{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1rem;margin-top:2rem;opacity:.4;pointer-events:none}
+.pt-card{background:var(--surf);border:2px dashed var(--border);
   border-radius:var(--r);padding:1.5rem}
-.col-head{font-family:var(--mono);font-size:.68rem;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;margin-bottom:1rem;
-  display:flex;align-items:center;gap:.4rem}
-.col-head.defects{color:var(--red)}
-.col-head.defects::before{content:'';width:7px;height:7px;background:var(--red);border-radius:50%}
-.col-head.insp{color:var(--blue)}
-.col-head.insp::before{content:'';width:7px;height:7px;background:var(--blue);border-radius:50%}
-.def-item{display:flex;align-items:start;gap:.6rem;padding:.55rem 0;
-  border-bottom:1px solid var(--border);font-size:.83rem}
-.def-item:last-child{border-bottom:none}
-.def-dot{width:6px;height:6px;border-radius:50%;background:var(--red);
-  flex-shrink:0;margin-top:.45rem}
-.def-item strong{display:block;font-weight:600;margin-bottom:.15rem}
-.def-item p{color:var(--ink2);font-size:.78rem;line-height:1.6}
-.insp-item{padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.83rem}
-.insp-item:last-child{border-bottom:none}
-.insp-item strong{font-weight:600;display:block;margin-bottom:.15rem;color:var(--blue)}
-.insp-item p{color:var(--ink2);font-size:.78rem;line-height:1.6}
+.pt-top{height:4px;background:var(--border);border-radius:2px;margin-bottom:1rem}
+.pt-line{height:8px;background:var(--bg2);border-radius:4px;margin-bottom:.5rem}
+.pt-line.short{width:60%}
+.pt-tags{display:flex;gap:.4rem;margin-top:.8rem}
+.pt-tag{height:18px;width:50px;background:var(--bg2);border-radius:3px}
 
-/* ─── EQUIPMENT PAGE ─── */
-.equip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:1.25rem;margin-top:2.5rem}
-.equip-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);overflow:hidden;transition:all .25s}
-.equip-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.07)}
-.equip-header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border)}
-.equip-abbr{font-family:var(--mono);font-weight:700;font-size:1.1rem;color:var(--red);
-  margin-bottom:.25rem}
-.equip-name{font-size:.9rem;font-weight:600;color:var(--ink)}
-.equip-body{padding:1.25rem 1.5rem}
-.equip-body p{color:var(--ink2);font-size:.82rem;line-height:1.7;margin-bottom:.9rem}
-.equip-spec{display:flex;flex-direction:column;gap:.3rem}
-.spec-row{display:flex;justify-content:space-between;font-size:.75rem;
-  padding:.3rem 0;border-bottom:1px solid var(--border)}
-.spec-row:last-child{border-bottom:none}
-.spec-row span:first-child{color:var(--ink3);font-family:var(--mono);font-size:.68rem}
-.spec-row span:last-child{font-weight:500;color:var(--ink)}
-.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.9rem}
-.pros,.cons{padding:.6rem .8rem;border-radius:6px;font-size:.72rem;line-height:1.6}
-.pros{background:var(--green-l);color:var(--green)}
-.cons{background:var(--red-l);color:var(--red)}
-.pros strong,.cons strong{display:block;font-weight:700;margin-bottom:.25rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.06em}
-
-/* Comparison table */
-.comp-table-wrap{overflow-x:auto;margin-top:2.5rem;border:1px solid var(--border);border-radius:var(--r)}
-.comp-table{width:100%;border-collapse:collapse;font-size:.8rem}
-.comp-table th{background:var(--ink);color:#fff;font-family:var(--mono);font-size:.68rem;
-  font-weight:600;padding:.65rem 1rem;text-align:left;letter-spacing:.06em}
-.comp-table td{padding:.65rem 1rem;border-bottom:1px solid var(--border);vertical-align:top}
-.comp-table tr:last-child td{border-bottom:none}
-.comp-table tr:hover td{background:var(--bg)}
-.comp-table td:first-child{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--red);white-space:nowrap}
-
-/* ─── DATA PAGE ─── */
-.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:1.5rem;margin-top:2.5rem}
-.chart-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:1.5rem}
-.chart-title{font-family:var(--mono);font-size:.72rem;font-weight:600;
-  color:var(--ink2);letter-spacing:.06em;margin-bottom:1.2rem;
-  text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
-.chart-title::before{content:'';width:7px;height:7px;background:var(--red);border-radius:50%}
-.chart-box{height:220px;position:relative}
-.formula-box{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--red);
-  border-radius:0 var(--r) var(--r) 0;padding:1.2rem 1.5rem;margin-top:1.5rem}
-.formula-box h4{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--red);
-  letter-spacing:.08em;margin-bottom:.75rem;text-transform:uppercase}
-.formula{font-family:var(--mono);font-size:.9rem;color:var(--ink);
-  background:var(--surface);border:1px solid var(--border);padding:.6rem 1rem;
-  border-radius:6px;margin-bottom:.4rem;letter-spacing:.02em}
-.formula em{color:var(--red);font-style:normal}
-.formula-desc{font-size:.78rem;color:var(--ink3);line-height:1.6}
-
-/* surface roughness vis */
-.roughness-vis{display:flex;flex-direction:column;gap:.8rem;margin-top:1.5rem}
-.rq-row{display:flex;align-items:center;gap:.8rem}
-.rq-label{font-family:var(--mono);font-size:.7rem;color:var(--ink2);width:60px;flex-shrink:0}
-.rq-bar-wrap{flex:1;height:10px;background:var(--bg2);border-radius:5px;overflow:hidden}
-.rq-bar{height:100%;border-radius:5px;transition:width .8s ease}
-.rq-val{font-family:var(--mono);font-size:.7rem;color:var(--ink3);width:40px;text-align:right;flex-shrink:0}
-
-/* defect map */
-.defect-map{display:grid;grid-template-columns:repeat(10,1fr);
-  gap:3px;padding:1rem;background:var(--bg2);border-radius:8px;aspect-ratio:1;max-width:260px}
-.dm-cell{aspect-ratio:1;border-radius:2px;transition:opacity .2s}
-.dm-cell:hover{opacity:.7;cursor:crosshair}
-
-/* ─── PROJECTS PAGE ─── */
-.proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-  gap:1.25rem;margin-top:2.5rem}
-.proj-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);overflow:hidden;transition:all .25s;display:flex;flex-direction:column}
-.proj-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.07)}
-.proj-top{height:6px}
-.proj-body{padding:1.5rem;flex:1;display:flex;flex-direction:column}
-.proj-cat{font-family:var(--mono);font-size:.65rem;font-weight:600;
-  letter-spacing:.1em;text-transform:uppercase;margin-bottom:.5rem}
-.proj-card h3{font-size:1rem;font-weight:600;margin-bottom:.5rem;letter-spacing:-.2px}
-.proj-card p{color:var(--ink2);font-size:.82rem;line-height:1.7;flex:1}
-.proj-meta{margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border);
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
-.proj-tags{display:flex;flex-wrap:wrap;gap:.3rem}
-.proj-tag{font-family:var(--mono);font-size:.62rem;background:var(--bg2);
-  border:1px solid var(--border);color:var(--ink3);padding:.18rem .5rem;border-radius:3px}
-.proj-link{font-family:var(--mono);font-size:.7rem;color:var(--blue);text-decoration:none;
-  font-weight:600;transition:color .15s}
-.proj-link:hover{color:var(--red)}
-.proj-result{margin-top:.9rem;background:var(--green-l);border:1px solid var(--green);
-  border-radius:6px;padding:.6rem .8rem}
-.proj-result-label{font-family:var(--mono);font-size:.62rem;font-weight:600;
-  color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.2rem}
-.proj-result p{font-size:.78rem;color:var(--green);line-height:1.5}
-
-/* ─── TEAM PAGE ─── */
-.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:1rem;margin-top:2.5rem}
-.team-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r);padding:1.75rem 1.5rem;text-align:center;transition:all .2s}
-.team-card:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(0,0,0,.06)}
-.team-av{width:64px;height:64px;border-radius:14px;margin:0 auto 1rem;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-weight:700;font-size:1rem;color:#fff}
-.team-card h3{font-size:.95rem;font-weight:600;margin-bottom:.2rem}
-.team-card .role{color:var(--ink2);font-size:.78rem;margin-bottom:.65rem}
-.team-card .focus{font-family:var(--mono);font-size:.65rem;
-  background:var(--bg2);border:1px solid var(--border);color:var(--ink3);
-  padding:.2rem .6rem;border-radius:3px;display:inline-block}
-.team-card .contrib{margin-top:.75rem;font-size:.75rem;color:var(--ink2);line-height:1.6}
-
-/* ─── REFERENCES PAGE ─── */
-.ref-list{display:flex;flex-direction:column;gap:.6rem;margin-top:2rem}
-.ref-item{display:flex;gap:.9rem;align-items:start;padding:1rem 1.1rem;
-  background:var(--surface);border:1px solid var(--border);border-radius:8px;
-  transition:border-color .2s}
-.ref-item:hover{border-color:var(--blue)}
-.ref-n{font-family:var(--mono);font-size:.68rem;font-weight:700;color:var(--red);
-  background:var(--red-l);width:28px;height:28px;border-radius:4px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.1rem}
-.ref-t cite{font-style:normal;font-size:.83rem;color:var(--ink);
-  display:block;margin-bottom:.2rem;line-height:1.55}
-.ref-t span{font-family:var(--mono);font-size:.68rem;color:var(--ink3)}
-
-/* ─── FOOTER ─── */
-footer{background:var(--ink);color:#ccc;padding:2.5rem 5vw 1.5rem}
-.foot-wrap{display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;margin-bottom:2rem}
-.foot-logo{font-family:var(--mono);font-weight:600;font-size:.95rem;color:#f7f5f0}
-.foot-desc{font-size:.78rem;color:#777;margin-top:.4rem;max-width:220px;line-height:1.6}
-.foot-cols{display:flex;gap:3rem;flex-wrap:wrap}
-.foot-col h4{font-size:.78rem;font-weight:600;color:#f7f5f0;margin-bottom:.7rem}
-.foot-col a{display:block;color:#777;text-decoration:none;font-size:.75rem;
-  margin-bottom:.4rem;transition:color .15s}
-.foot-col a:hover{color:var(--red)}
-.foot-bottom{padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.08);
+/* ── FOOTER ── */
+footer{background:var(--ink);color:#bbb;padding:2.5rem 5vw 1.5rem}
+.fw{display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;margin-bottom:1.8rem}
+.flogo{font-family:var(--mono);font-weight:600;font-size:.92rem;color:#f6f4ef}
+.fdesc{font-size:.75rem;color:#666;margin-top:.4rem;max-width:200px;line-height:1.6}
+.fcols{display:flex;gap:2.5rem;flex-wrap:wrap}
+.fcol h4{font-size:.75rem;font-weight:600;color:#f6f4ef;margin-bottom:.62rem}
+.fcol a{display:block;color:#666;text-decoration:none;font-size:.73rem;
+  margin-bottom:.36rem;transition:color .15s;cursor:pointer}
+.fcol a:hover{color:var(--red)}
+.fb{padding-top:1.3rem;border-top:1px solid rgba(255,255,255,.08);
   display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-.foot-bottom p{font-size:.72rem;color:#555}
-.foot-mono{font-family:var(--mono);font-size:.68rem;color:#444}
+.fb p{font-size:.69rem;color:#444}
+.fmono{font-family:var(--mono);font-size:.65rem;color:#3a3a36}
 
-/* ─── MOBILE ─── */
-.mob-menu{display:none;position:fixed;inset:0;z-index:290;
-  background:rgba(247,245,240,.97);backdrop-filter:blur(18px);
+.mob{display:none;position:fixed;inset:0;z-index:290;
+  background:rgba(246,244,239,.97);backdrop-filter:blur(18px);
   flex-direction:column;align-items:center;justify-content:center;gap:1.8rem}
-.mob-menu.open{display:flex}
-.mob-menu a{color:var(--ink);font-size:1.5rem;font-weight:700;
-  text-decoration:none;font-family:var(--serif)}
-.mob-close{position:absolute;top:1.5rem;right:1.5rem;background:none;
-  border:none;font-size:1.3rem;cursor:pointer;color:var(--ink)}
+.mob.open{display:flex}
+.mob a{color:var(--ink);text-decoration:none;font-family:var(--serif);font-size:1.5rem;font-weight:600}
+.mob-x{position:absolute;top:1.4rem;right:1.4rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink)}
 
-/* ─── ANIM ─── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.home-inner>*{animation:fadeUp .6s ease both}
-.home-inner>*:nth-child(1){animation-delay:.05s}
-.home-inner>*:nth-child(2){animation-delay:.12s}
-.home-inner>*:nth-child(3){animation-delay:.18s}
-.home-inner>*:nth-child(4){animation-delay:.24s}
-.home-inner>*:nth-child(5){animation-delay:.30s}
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.h-inner>*{animation:fu .6s ease both}
+.h-inner>*:nth-child(1){animation-delay:.04s}.h-inner>*:nth-child(2){animation-delay:.1s}
+.h-inner>*:nth-child(3){animation-delay:.16s}.h-inner>*:nth-child(4){animation-delay:.22s}
+.h-inner>*:nth-child(5){animation-delay:.28s}.h-inner>*:nth-child(6){animation-delay:.34s}
 
-/* ─── RESPONSIVE ─── */
-@media(max-width:820px){
-  .nav-items,.ham~a{display:none}.ham{display:flex}
-  .insp-grid{grid-template-columns:1fr}
-  .chart-grid{grid-template-columns:1fr}
-  .tab-panel.active{grid-template-columns:1fr}
+@media(max-width:880px){
+  .nav-pills{display:none}.ham{display:flex}
+  .ig{grid-template-columns:1fr}
+  .pc-grid{grid-template-columns:1fr}
+  .scope-strip{grid-template-columns:1fr}
+  .h-right{display:none}
 }
-@media(max-width:600px){
-  .home-chip-svg{display:none}
-  .pros-cons{grid-template-columns:1fr}
-}
+@media(max-width:560px){.h-wafer{display:none}}
 </style>
 </head>
 <body>
 
-<!-- ═══ NAV ═══ -->
+<!-- NAV -->
 <nav>
-  <a class="logo" href="#" onclick="nav('home')">
-    <div class="logo-sq"><span></span><span></span><span></span><span></span></div>
-    ChipTrace
+  <a class="logo" href="#" onclick="go('home')">
+    <div class="logo-icon">
+      <svg viewBox="0 0 11 11" fill="none"><rect x="1" y="1" width="4" height="4" rx="1" fill="#fff"/><rect x="6" y="1" width="4" height="4" rx="1" fill="#fff" opacity=".5"/><rect x="1" y="6" width="4" height="4" rx="1" fill="#fff" opacity=".5"/><rect x="6" y="6" width="4" height="4" rx="1" fill="#fff"/></svg>
+    </div>
+    SemiTrace
   </a>
-  <ul class="nav-items">
-    <li><a href="#" onclick="nav('home')" id="nl-home" class="active">Home</a></li>
-    <li><a href="#" onclick="nav('process')" id="nl-process">Manufacturing</a></li>
-    <li><a href="#" onclick="nav('inspection')" id="nl-inspection">Inspection</a></li>
-    <li><a href="#" onclick="nav('equipment')" id="nl-equipment">Equipment</a></li>
-    <li><a href="#" onclick="nav('data')" id="nl-data">Data & Analysis</a></li>
-    <li><a href="#" onclick="nav('projects')" id="nl-projects">Projects</a></li>
-    <li><a href="#" onclick="nav('team')" id="nl-team">Team</a></li>
-    <li><a href="#" onclick="nav('refs')" id="nl-refs">References</a></li>
+  <ul class="nav-pills">
+    <li><a href="#" onclick="go('home')" id="nl-home" class="on">Home</a></li>
+    <li><a href="#" onclick="go('process')" id="nl-process">Manufacturing</a></li>
+    <li><a href="#" onclick="go('inspect')" id="nl-inspect">Inspection</a></li>
+    <li><a href="#" onclick="go('equip')" id="nl-equip">Equipment</a></li>
+    <li><a href="#" onclick="go('data')" id="nl-data">Data & Analysis</a></li>
+    <li><a href="#" onclick="go('projects')" id="nl-projects">Projects</a></li>
   </ul>
   <button class="ham" onclick="toggleMob()"><span></span><span></span><span></span></button>
 </nav>
 
-<div class="mob-menu" id="mobMenu">
-  <button class="mob-close" onclick="toggleMob()">✕</button>
-  <a href="#" onclick="nav('home');toggleMob()">Home</a>
-  <a href="#" onclick="nav('process');toggleMob()">Manufacturing</a>
-  <a href="#" onclick="nav('inspection');toggleMob()">Inspection</a>
-  <a href="#" onclick="nav('equipment');toggleMob()">Equipment</a>
-  <a href="#" onclick="nav('data');toggleMob()">Data</a>
-  <a href="#" onclick="nav('projects');toggleMob()">Projects</a>
-  <a href="#" onclick="nav('team');toggleMob()">Team</a>
-  <a href="#" onclick="nav('refs');toggleMob()">References</a>
+<div class="mob" id="mobMenu">
+  <button class="mob-x" onclick="toggleMob()">✕</button>
+  <a href="#" onclick="go('home');toggleMob()">Home</a>
+  <a href="#" onclick="go('process');toggleMob()">Manufacturing</a>
+  <a href="#" onclick="go('inspect');toggleMob()">Inspection</a>
+  <a href="#" onclick="go('equip');toggleMob()">Equipment</a>
+  <a href="#" onclick="go('data');toggleMob()">Data & Analysis</a>
+  <a href="#" onclick="go('projects');toggleMob()">Projects</a>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     PAGE 1 — HOME
-═══════════════════════════════════════════ -->
-<div class="page active" id="page-home">
+<!-- ══════════════════════════════════════════
+     HOME
+══════════════════════════════════════════ -->
+<div class="page on" id="page-home">
+<section id="h-hero">
+  <div class="h-grid"></div>
 
-  <section id="home-hero">
-    <div class="home-grid-bg"></div>
-    <!-- decorative chip SVG -->
-    <div class="home-chip-svg">
-      <svg width="420" height="420" viewBox="0 0 420 420" fill="none">
-        <rect x="90" y="90" width="240" height="240" rx="18" stroke="#1c1c18" stroke-width="2.5"/>
-        <rect x="115" y="115" width="190" height="190" rx="8" fill="#1c1c18" opacity=".05" stroke="#1c1c18" stroke-width="1"/>
-        <rect x="148" y="148" width="124" height="124" rx="5" fill="#1c1c18" opacity=".08" stroke="#1c1c18" stroke-width=".7"/>
-        <!-- pins -->
-        <line x1="45" y1="135" x2="90" y2="135" stroke="#1c1c18" stroke-width="2"/><line x1="45" y1="165" x2="90" y2="165" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="45" y1="195" x2="90" y2="195" stroke="#1c1c18" stroke-width="2"/><line x1="45" y1="225" x2="90" y2="225" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="45" y1="255" x2="90" y2="255" stroke="#1c1c18" stroke-width="2"/><line x1="45" y1="285" x2="90" y2="285" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="330" y1="135" x2="375" y2="135" stroke="#1c1c18" stroke-width="2"/><line x1="330" y1="165" x2="375" y2="165" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="330" y1="195" x2="375" y2="195" stroke="#1c1c18" stroke-width="2"/><line x1="330" y1="225" x2="375" y2="225" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="330" y1="255" x2="375" y2="255" stroke="#1c1c18" stroke-width="2"/><line x1="330" y1="285" x2="375" y2="285" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="148" y1="45" x2="148" y2="90" stroke="#1c1c18" stroke-width="2"/><line x1="178" y1="45" x2="178" y2="90" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="210" y1="45" x2="210" y2="90" stroke="#1c1c18" stroke-width="2"/><line x1="242" y1="45" x2="242" y2="90" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="272" y1="45" x2="272" y2="90" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="148" y1="330" x2="148" y2="375" stroke="#1c1c18" stroke-width="2"/><line x1="178" y1="330" x2="178" y2="375" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="210" y1="330" x2="210" y2="375" stroke="#1c1c18" stroke-width="2"/><line x1="242" y1="330" x2="242" y2="375" stroke="#1c1c18" stroke-width="2"/>
-        <line x1="272" y1="330" x2="272" y2="375" stroke="#1c1c18" stroke-width="2"/>
-        <!-- die blocks -->
-        <rect x="158" y="158" width="40" height="40" rx="3" fill="#1c1c18" opacity=".12"/>
-        <rect x="210" y="158" width="40" height="40" rx="3" fill="#1c1c18" opacity=".12"/>
-        <rect x="158" y="210" width="40" height="40" rx="3" fill="#1c1c18" opacity=".12"/>
-        <rect x="210" y="210" width="40" height="40" rx="3" fill="#b83a0a" opacity=".18"/>
-      </svg>
-    </div>
-    <div class="home-inner">
-      <div class="home-eyebrow">Academic Research Platform</div>
-      <h1 class="home-h1">Semiconductor<br><em>Inspection</em><br>Technology</h1>
-      <p class="home-desc">A comprehensive academic study on chipset manufacturing processes, defect mechanisms, and inspection methodologies — from wafer preparation to back-end packaging. Understanding how quality is built into every layer.</p>
-      <div class="home-btns">
-        <button class="btn-red" onclick="nav('process')">Explore Manufacturing →</button>
-        <button class="btn-ghost" onclick="nav('inspection')">Inspection Methods</button>
-      </div>
-      <div class="home-kpi">
-        <div class="kpi"><strong>4</strong><span>Process Stages</span></div>
-        <div class="kpi"><strong>20+</strong><span>Defect Types</span></div>
-        <div class="kpi"><strong>7</strong><span>Inspection Tools</span></div>
-        <div class="kpi"><strong>0.1μm</strong><span>Min. Resolution</span></div>
+  <!-- RIGHT — 3D Wafer -->
+  <div class="h-right">
+    <div class="wafer3d-scene" id="waferScene">
+      <div class="wafer3d" id="wafer3d">
+        <div class="wlayer wl0"></div>
+        <div class="wlayer wl1"></div>
+        <div class="wlayer wl2"></div>
+        <div class="wlayer wl3">
+          <div class="wdie-grid" id="wdieGrid"></div>
+        </div>
+        <div class="wnotch"></div>
       </div>
     </div>
-  </section>
+    <div class="wafer3d-label">300 mm Silicon Wafer · Die Map</div>
+    <div class="hover-hint">hover to pause · drag to rotate</div>
+  </div>
 
-  <!-- WHY INSPECTION MATTERS -->
-  <section class="sec sec-alt">
-    <div class="container">
-      <div class="reveal">
-        <div class="sec-label">Why It Matters</div>
-        <h2 class="sec-h">Inspection Drives Yield,<br>Cost & Reliability</h2>
-        <p class="sec-sub">A single undetected defect in a nanometer-scale transistor can propagate through the entire device stack, causing functional failures that cost orders of magnitude more to fix in the field than at the wafer stage.</p>
-      </div>
-      <div class="why-grid reveal" style="transition-delay:.08s">
-        <div class="why-card">
-          <div class="why-icon">YIELD</div>
-          <h3>Yield Optimization</h3>
-          <p>Early defect detection prevents defective wafers from consuming expensive downstream processes. Each percentage point of yield gain translates directly to millions in revenue at volume.</p>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">COST</div>
-          <h3>Cost of Quality</h3>
-          <p>A defect caught at wafer stage costs ~$0.01 to detect. The same defect missed to field return costs $1,000–$10,000+ in recall, rework, and brand damage. Inspection ROI is massive.</p>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">RELIABILITY</div>
-          <h3>Long-Term Reliability</h3>
-          <p>Latent defects — invisible at functional test but present at atomic scale — cause early field failures. Thermal cycling, electromigration, and mechanical fatigue reveal these over time.</p>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">PROCESS</div>
-          <h3>Process Control</h3>
-          <p>Statistical process control (SPC) driven by inspection data closes the feedback loop to manufacturing, enabling real-time process corrections before systematic defects affect entire lots.</p>
-        </div>
-      </div>
+  <div class="h-inner">
+    <div class="h-eye">Semiconductor Manufacturing &amp; Inspection</div>
+    <div class="h-warn">⚠ Scope: Wafer-level semiconductor fabrication — NOT PCB assembly</div>
+    <h1 class="h-h1">Chip Manufacturing<br>&amp; <em>Inspection</em><br>Technology</h1>
+    <p class="h-desc">A comprehensive academic study of how integrated circuits are fabricated at nanometer scale — from raw silicon crystal to finished wafer — and how modern metrology and inspection methods ensure quality, yield, and reliability at each stage.</p>
+    <div class="h-btns">
+      <button class="btn-fill" onclick="go('process')">Explore Process →</button>
+      <button class="btn-line" onclick="go('inspect')">Inspection Methods</button>
     </div>
-  </section>
-
-  <!-- PROCESS OVERVIEW FLOW -->
-  <section class="sec">
-    <div class="container">
-      <div class="reveal">
-        <div class="sec-label">Quick Overview</div>
-        <h2 class="sec-h">Manufacturing + Inspection<br>Pipeline</h2>
-      </div>
-      <div style="margin-top:2rem;overflow-x:auto">
-        <svg width="100%" viewBox="0 0 700 100" style="min-width:560px" class="reveal" style="transition-delay:.08s">
-          <defs>
-            <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-              <path d="M2 1.5L8 5L2 8.5" fill="none" stroke="#9a9990" stroke-width="1.5" stroke-linecap="round"/>
-            </marker>
-          </defs>
-          <!-- boxes -->
-          <rect x="5" y="28" width="120" height="44" rx="7" fill="#1c1c18" opacity=".06" stroke="#1c1c18" stroke-width=".7"/>
-          <text x="65" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#1c1c18">Wafer Prep</text>
-          <text x="65" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9a9990">Substrate ready</text>
-          <line x1="125" y1="50" x2="148" y2="50" stroke="#9a9990" stroke-width="1" marker-end="url(#arr)"/>
-
-          <rect x="150" y="28" width="110" height="44" rx="7" fill="#b83a0a" opacity=".08" stroke="#b83a0a" stroke-width=".7"/>
-          <text x="205" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#b83a0a">FEOL</text>
-          <text x="205" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9a9990">Transistor formation</text>
-          <line x1="260" y1="50" x2="283" y2="50" stroke="#9a9990" stroke-width="1" marker-end="url(#arr)"/>
-
-          <rect x="285" y="28" width="110" height="44" rx="7" fill="#1a4f7a" opacity=".08" stroke="#1a4f7a" stroke-width=".7"/>
-          <text x="340" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#1a4f7a">MEOL</text>
-          <text x="340" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9a9990">Contact / local interconnect</text>
-          <line x1="395" y1="50" x2="418" y2="50" stroke="#9a9990" stroke-width="1" marker-end="url(#arr)"/>
-
-          <rect x="420" y="28" width="110" height="44" rx="7" fill="#1a5e35" opacity=".08" stroke="#1a5e35" stroke-width=".7"/>
-          <text x="475" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#1a5e35">BEOL</text>
-          <text x="475" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9a9990">Metal interconnects</text>
-          <line x1="530" y1="50" x2="553" y2="50" stroke="#9a9990" stroke-width="1" marker-end="url(#arr)"/>
-
-          <rect x="555" y="28" width="140" height="44" rx="7" fill="#4a1a7a" opacity=".08" stroke="#4a1a7a" stroke-width=".7"/>
-          <text x="625" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#4a1a7a">Packaging & Test</text>
-          <text x="625" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#9a9990">Final product</text>
-
-          <!-- inspection markers -->
-          <text x="65" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#b83a0a">🔬 Optical/AFM</text>
-          <text x="205" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#b83a0a">🔬 CD-SEM/XRD</text>
-          <text x="340" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#b83a0a">🔬 Electrical/SEM</text>
-          <text x="475" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#b83a0a">🔬 X-ray/IR</text>
-          <text x="625" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#b83a0a">🔬 AOI/ICT/JTAG</text>
-        </svg>
-      </div>
+    <div class="h-kpis">
+      <div class="kpi"><strong>2 nm</strong><span>Current Node (2025)</span></div>
+      <div class="kpi"><strong>EUV</strong><span>High-NA Lithography</span></div>
+      <div class="kpi"><strong>GAA</strong><span>Transistor Architecture</span></div>
+      <div class="kpi"><strong>0.01 nm</strong><span>AFM Vertical Res.</span></div>
     </div>
-  </section>
+  </div>
+</section>
+
+<!-- SCOPE -->
+<section class="sec sec-bg">
+<div class="wrap">
+  <div class="rv"><div class="lbl">Study Scope</div>
+    <h2 class="sh">Semiconductor Fabrication —<br><em>Not</em> PCB Assembly</h2>
+    <p class="sd">This platform covers atomic-scale silicon device fabrication. The scope boundary must be understood clearly before engaging with any content.</p>
+  </div>
+  <div class="scope-strip rv" style="transition-delay:.07s">
+    <div class="sc sc-w">
+      <div class="sc-head">❌ Out of Scope — PCB / Board Level</div>
+      <ul class="sc-list">
+        <li>Printed Circuit Board (PCB) design and layout</li>
+        <li>Solder joint inspection (BGA, SMT, THT)</li>
+        <li>Board-level component placement / reflow</li>
+        <li>AOI of assembled PCBs</li>
+        <li>Arduino, microcontroller development boards</li>
+        <li>PCB trace defects and electroless plating</li>
+      </ul>
+    </div>
+    <div class="sc sc-r">
+      <div class="sc-head">✓ In Scope — Semiconductor Fabrication</div>
+      <ul class="sc-list">
+        <li>Silicon wafer preparation, CMP polishing (Ra &lt; 0.1 nm)</li>
+        <li>FEOL: EUV lithography, RIE etch, ion implant, GAA transistors</li>
+        <li>MEOL: W/Co contact fill, self-aligned contacts</li>
+        <li>BEOL: Cu dual-damascene, low-k dielectric (10–18 layers)</li>
+        <li>Wafer-level inspection: AFM, WLI, CD-SEM, XRD, OCD</li>
+        <li>Yield modeling, SPC, and defect density analysis</li>
+      </ul>
+    </div>
+  </div>
 </div>
+</section>
 
-<!-- ═══════════════════════════════════════════
-     PAGE 2 — MANUFACTURING PROCESS
-═══════════════════════════════════════════ -->
+<!-- WHY INSPECTION -->
+<section class="sec">
+<div class="wrap">
+  <div class="rv"><div class="lbl">Motivation</div>
+    <h2 class="sh">Why Inspection Drives<br><em>Semiconductor Yield</em></h2>
+    <p class="sd">At 2 nm node, a single misplaced atom or 0.3 nm CD deviation can render an entire die non-functional. Inline metrology closes the feedback loop to process engineers in seconds.</p>
+  </div>
+  <div class="why-grid rv" style="transition-delay:.08s">
+    <div class="wc"><div class="wc-tag">Yield</div><h3>Defect Density → Die Yield</h3><p>Y = e^(−D₀·A). At 2 nm node, die area ≈ 100 mm² and defect density targets &lt;0.05/cm². Each 0.01/cm² increase costs ~5% yield — hundreds of millions per year at volume.</p></div>
+    <div class="wc"><div class="wc-tag">Cost</div><h3>Cost of Escaping Defects</h3><p>Bare wafer: $150. After 800+ process steps: $5,000–$20,000 per wafer. A defect caught at bare wafer costs pennies to screen. The same defect found at chip test costs the entire process value.</p></div>
+    <div class="wc"><div class="wc-tag">APC</div><h3>Inline Feedback to Process</h3><p>CD-SEM and OCD measurements after each litho step feed APC (Advanced Process Control) systems that auto-correct scanner dose, focus, and CMP pressure — within the same lot, in real time.</p></div>
+    <div class="wc"><div class="wc-tag">Reliability</div><h3>Latent Defect Elimination</h3><p>Crystal dislocations, oxide pinholes, and void-seeded Cu interconnects pass functional test but fail under EM or TDDB stress. Early screening prevents field failures in automotive, aerospace, and medical applications.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- PROCESS OVERVIEW FLOW -->
+<section class="sec sec-bg">
+<div class="wrap">
+  <div class="rv"><div class="lbl">Process Overview</div>
+    <h2 class="sh">Wafer-to-Die <em>Pipeline</em></h2>
+  </div>
+  <div class="flow-strip rv" style="transition-delay:.06s">
+    <svg width="100%" viewBox="0 0 760 108" style="min-width:640px">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M2 2L8 5L2 8" fill="none" stroke="#9e9b94" stroke-width="1.5" stroke-linecap="round"/></marker></defs>
+      <rect x="4" y="26" width="126" height="54" rx="7" fill="#1a1a16" opacity=".05" stroke="#1a1a16" stroke-width=".8"/>
+      <text x="67" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#1a1a16">Wafer Prep</text>
+      <text x="67" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Czochralski · CMP</text>
+      <text x="67" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Ra &lt; 0.1 nm</text>
+      <line x1="130" y1="53" x2="151" y2="53" stroke="#9e9b94" stroke-width=".9" marker-end="url(#a)"/>
+      <rect x="153" y="26" width="136" height="54" rx="7" fill="#c23b0c" opacity=".07" stroke="#c23b0c" stroke-width=".8"/>
+      <text x="221" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#c23b0c">FEOL</text>
+      <text x="221" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">EUV Litho · GAA</text>
+      <text x="221" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Transistor formation</text>
+      <line x1="289" y1="53" x2="310" y2="53" stroke="#9e9b94" stroke-width=".9" marker-end="url(#a)"/>
+      <rect x="312" y="26" width="136" height="54" rx="7" fill="#184c78" opacity=".07" stroke="#184c78" stroke-width=".8"/>
+      <text x="380" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#184c78">MEOL</text>
+      <text x="380" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">W / Co contacts</text>
+      <text x="380" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Local interconnect</text>
+      <line x1="448" y1="53" x2="469" y2="53" stroke="#9e9b94" stroke-width=".9" marker-end="url(#a)"/>
+      <rect x="471" y="26" width="136" height="54" rx="7" fill="#18572f" opacity=".07" stroke="#18572f" stroke-width=".8"/>
+      <text x="539" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#18572f">BEOL</text>
+      <text x="539" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Cu dual-damascene</text>
+      <text x="539" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">10–18 metal layers</text>
+      <line x1="607" y1="53" x2="628" y2="53" stroke="#9e9b94" stroke-width=".9" marker-end="url(#a)"/>
+      <rect x="630" y="26" width="126" height="54" rx="7" fill="#3e1672" opacity=".07" stroke="#3e1672" stroke-width=".8"/>
+      <text x="693" y="47" text-anchor="middle" font-family="IBM Plex Mono" font-size="8.5" font-weight="600" fill="#3e1672">Die Test</text>
+      <text x="693" y="60" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Wafer probe · BIST</text>
+      <text x="693" y="72" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.8" fill="#9e9b94">Good die map</text>
+      <!-- inspection row -->
+      <text x="67" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.2" fill="#c23b0c">AFM · WLI · Optical</text>
+      <text x="221" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.2" fill="#c23b0c">CD-SEM · OCD · XRD</text>
+      <text x="380" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.2" fill="#c23b0c">Electrical · SEM · eBI</text>
+      <text x="539" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.2" fill="#c23b0c">X-ray · IR · SAM</text>
+      <text x="693" y="95" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.2" fill="#c23b0c">Probe · ATPG · BIST</text>
+    </svg>
+  </div>
+</div>
+</section>
+</div><!-- /home -->
+
+<!-- ══════════════════════════════════════════
+     MANUFACTURING
+══════════════════════════════════════════ -->
 <div class="page" id="page-process">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Manufacturing</div>
-      <h2 class="sec-h">Chip Manufacturing Process</h2>
-      <p class="sec-sub">From raw silicon ingot to functional integrated circuit — four major process stages, each introducing new structures and new potential defects.</p>
+<section class="sec">
+<div class="wrap">
+  <div class="lbl">Manufacturing Process</div>
+  <h2 class="sh">Semiconductor Chip<br><em>Fabrication — 2025 State of the Art</em></h2>
+  <p class="sd">From 300 mm silicon crystal to 2 nm-node transistors. All process details reflect current high-volume manufacturing at leading logic foundries (TSMC N2, Samsung SF2, Intel 18A).</p>
 
-      <div class="proc-timeline">
-        <div class="proc-step">
-          <div class="proc-dot active">01</div>
-          <div class="proc-body">
-            <div class="proc-tag">Stage 1 — Substrate</div>
-            <h3>Wafer Preparation</h3>
-            <p>Silicon ingots grown via the Czochralski process are sliced into wafers 0.7–1.0 mm thick, then lapped, etched, and polished to a mirror-like surface roughness (Ra &lt; 0.1 nm). Crystal orientation (⟨100⟩ or ⟨111⟩), resistivity, and dopant concentration are tightly controlled. The goal: a defect-free, atomically smooth substrate that will carry millions of transistors.</p>
-            <div class="proc-chips">
-              <span class="chip">Czochralski growth</span><span class="chip">Diamond wire saw</span>
-              <span class="chip">CMP polishing</span><span class="chip">HF cleaning</span>
-              <span class="chip">Ra &lt; 0.1 nm target</span>
-            </div>
+  <!-- 3D VISUALS SECTION -->
+  <div class="lbl rv" style="margin:2.5rem 0 .8rem">3D Process Visualizations</div>
+  <div class="proc-visual-grid rv" style="transition-delay:.04s">
+
+    <!-- 3D Wafer -->
+    <div class="pv-card">
+      <div class="pv-title">Silicon Wafer — Die Map</div>
+      <div class="wafer3d-scene" id="waferScene2">
+        <div class="wafer3d" id="wafer3d2">
+          <div class="wlayer wl0"></div>
+          <div class="wlayer wl1"></div>
+          <div class="wlayer wl2"></div>
+          <div class="wlayer wl3"><div class="wdie-grid" id="wdieGrid2"></div></div>
+          <div class="wnotch"></div>
+        </div>
+      </div>
+      <div class="hover-hint">hover to pause rotation</div>
+      <p class="pv-desc">300 mm monocrystalline silicon wafer with simulated die yield map. Green = good die, red = defective. Edge exclusion zone (3 mm) shown. Czochralski-grown ⟨100⟩ orientation, p-type, 1–10 Ω·cm.</p>
+    </div>
+
+    <!-- GAA Transistor 3D -->
+    <div class="pv-card">
+      <div class="pv-title">Gate-All-Around (GAA) Nanosheet</div>
+      <div class="gaa3d-scene">
+        <div class="gaa3d" id="gaaTrans">
+          <!-- Built by JS -->
+        </div>
+      </div>
+      <div class="hover-hint">hover to pause</div>
+      <p class="pv-desc">GAA nanosheet transistor — successor to FinFET at 2 nm node and below. Three stacked silicon nanosheets (3–5 nm thick) are fully surrounded by metal gate, maximizing electrostatic control and eliminating short-channel effects.</p>
+    </div>
+
+    <!-- BEOL Layer Stack 3D -->
+    <div class="pv-card">
+      <div class="pv-title">BEOL Interconnect Layer Stack</div>
+      <div class="stack3d-scene" id="stackScene">
+        <div class="stack3d" id="stack3d">
+          <!-- Built by JS -->
+        </div>
+      </div>
+      <div class="hover-hint">hover to pause</div>
+      <p class="pv-desc">Modern BEOL stack: 10–18 copper dual-damascene metal layers separated by ultra-low-k dielectric (k = 2.0–2.4). Lower layers (M0–M3) carry local signals; upper layers (M8+) distribute power and clock with wider, taller lines.</p>
+    </div>
+
+    <!-- EUV Lithography 3D -->
+    <div class="pv-card">
+      <div class="pv-title">EUV Lithography Cross-Section</div>
+      <div class="litho3d-scene">
+        <div class="litho3d" id="litho3d">
+          <!-- Built by JS -->
+        </div>
+      </div>
+      <div class="hover-hint">hover to pause</div>
+      <p class="pv-desc">High-NA EUV (NA = 0.55, λ = 13.5 nm) exposes photoresist with single-pass patterning of 8 nm half-pitch features. Tin plasma EUV source at 250 W. Eliminates multiple patterning required by 193 nm ArF immersion lithography.</p>
+    </div>
+
+  </div>
+
+  <!-- PROCESS STEPS -->
+  <div class="ptl" style="margin-top:3rem">
+
+    <div class="pstep">
+      <div class="pdot a">01</div>
+      <div class="pbody">
+        <div class="ptag">Substrate — 2025 Standard</div>
+        <h3>Wafer Preparation: 300 mm, Ultra-Low Defect Silicon</h3>
+        <p>Monocrystalline silicon ingots are grown via the <strong>Czochralski method</strong> at 1425 °C with magnetic field assistance (MCZ) to suppress oxygen-related defects. Modern 300 mm wafers target oxygen content of 10–13 ppma (Oi range per SEMI MF 1188). Diamond wire saws slice to ~775 µm; double-side grinding and <strong>CMP</strong> achieve Ra &lt; 0.08 nm (ITRS target). Point defect engineering (V-I balance, nitrogen co-doping) eliminates grown-in voids (COPs — crystal originated particles) that degrade gate oxide integrity. RCA SC-1 + SC-2 + HF-last cleaning removes metallic, organic, and native oxide contamination before every critical step. Polished wafers are shipped in SMIF pods under N₂ to prevent particle re-deposition.</p>
+        <div class="proc-diagram">
+          <div class="pd-title">// 300 mm WAFER PREP FLOW (2025)</div>
+          <div class="pd-flow">
+            <div class="pd-box" style="background:var(--bg2);border-color:var(--border);color:var(--ink2)">MCZ Growth<br><span style="font-size:.58rem;color:var(--ink3)">1425°C · N₂ doped</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--bg2);border-color:var(--border);color:var(--ink2)">Diamond Wire Saw<br><span style="font-size:.58rem;color:var(--ink3)">~775 µm slices</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--bg2);border-color:var(--border);color:var(--ink2)">DSG + Lapping<br><span style="font-size:.58rem;color:var(--ink3)">Sub-surface damage</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--red-l);border-color:var(--red);color:var(--red)">CMP Polish<br><span style="font-size:.58rem">Ra &lt; 0.08 nm</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--green-l);border-color:var(--green);color:var(--green)">RCA + HF Clean<br><span style="font-size:.58rem">Metal &lt;10⁹ at/cm²</span></div>
           </div>
         </div>
-
-        <div class="proc-step">
-          <div class="proc-dot">02</div>
-          <div class="proc-body">
-            <div class="proc-tag">Stage 2 — FEOL</div>
-            <h3>Front-End of Line (FEOL) — Transistor Formation</h3>
-            <p>FEOL encompasses all processes that create the active devices in the silicon: isolation (STI/LOCOS), well implantation, gate dielectric growth, polysilicon gate patterning, source/drain implantation, and silicidation. Photolithography — using 193 nm ArF immersion or EUV (13.5 nm) — defines features down to 2 nm node. Each photolithography step requires precise overlay (&lt;2 nm 3σ) and critical dimension (CD) control.</p>
-            <div class="proc-chips">
-              <span class="chip">EUV / ArF immersion</span><span class="chip">STI isolation</span>
-              <span class="chip">High-k/metal gate</span><span class="chip">Ion implantation</span>
-              <span class="chip">RTA anneal</span><span class="chip">CD &lt; 5 nm</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="proc-step">
-          <div class="proc-dot">03</div>
-          <div class="proc-body">
-            <div class="proc-tag">Stage 3 — MEOL</div>
-            <h3>Middle-End of Line (MEOL) — Contacts & Local Interconnect</h3>
-            <p>MEOL bridges the active devices to the first metal layers. Pre-metal dielectric (PMD) deposition is followed by contact hole etching and tungsten or cobalt fill. Local interconnect layers (e.g. self-aligned contacts, middle-of-line routing) reduce parasitic resistance between transistor terminals. Contact resistance uniformity is critical — even single-digit Ohm variation causes speed and power-efficiency degradation at scale.</p>
-            <div class="proc-chips">
-              <span class="chip">PECVD PMD</span><span class="chip">W/Co contact fill</span>
-              <span class="chip">CMP planarization</span><span class="chip">SAC patterning</span>
-              <span class="chip">Contact resistance &lt;10 Ω</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="proc-step">
-          <div class="proc-dot">04</div>
-          <div class="proc-body">
-            <div class="proc-tag">Stage 4 — BEOL</div>
-            <h3>Back-End of Line (BEOL) — Metal Interconnects</h3>
-            <p>BEOL builds the multilayer copper wiring system that connects transistors into functional circuits. Dual-damascene patterning forms vias and trenches in low-k dielectric, which are then filled with copper via electroplating and planarized by CMP. Modern chips have 10–18 metal layers. Each layer introduces electromigration and dielectric reliability concerns. Barrier layers (TaN/Ta) prevent Cu diffusion into oxide.</p>
-            <div class="proc-chips">
-              <span class="chip">Dual damascene Cu</span><span class="chip">Low-k dielectric (k &lt; 2.5)</span>
-              <span class="chip">TaN/Ta barrier</span><span class="chip">ECP copper fill</span>
-              <span class="chip">10–18 metal layers</span><span class="chip">CMP each layer</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="proc-step">
-          <div class="proc-dot">05</div>
-          <div class="proc-body">
-            <div class="proc-tag">Stage 5 — Packaging</div>
-            <h3>Back-End Packaging & Assembly</h3>
-            <p>Wafer-level testing identifies functional dies. Good dies are diced, attached to substrates (flip-chip, wire bond, or advanced 2.5D/3D integration), and encapsulated. Solder bumps (C4 for flip-chip) or bond wires form electrical connections to the package. Final electrical, functional, and burn-in tests verify quality before shipment.</p>
-            <div class="proc-chips">
-              <span class="chip">Flip-chip C4 bumps</span><span class="chip">Wafer dicing</span>
-              <span class="chip">Underfill dispense</span><span class="chip">Wire bonding</span>
-              <span class="chip">Burn-in test</span><span class="chip">2.5D / 3D packaging</span>
-            </div>
-          </div>
+        <div class="pchips">
+          <span class="pch">MCZ growth · N₂ co-doping</span><span class="pch">COP-free wafer</span>
+          <span class="pch">CMP Ra &lt; 0.08 nm</span><span class="pch">RCA SC-1 / SC-2 / HF-last</span>
+          <span class="pch">SMIF pod handling</span><span class="pch">SEMI M1 / ITRS spec</span>
         </div>
       </div>
     </div>
-  </section>
+
+    <div class="pstep">
+      <div class="pdot">02</div>
+      <div class="pbody">
+        <div class="ptag">FEOL — 2 nm Node, 2025</div>
+        <h3>FEOL: EUV Lithography + GAA Nanosheet Transistors</h3>
+        <p>The 2025 state of the art in FEOL centers on <strong>Gate-All-Around (GAA) nanosheet transistors</strong> — replacing FinFET at 2 nm node. Three stacked Si nanosheets (3–5 nm thick, 20–30 nm wide) are fabricated by epitaxial SiGe/Si superlattice deposition, followed by SiGe release etch. The gate stack (HfO₂ + TiN/W metal gate) wraps 360° around each nanosheet, providing superior electrostatic control vs. FinFET. <strong>High-NA EUV</strong> (ASML EXE:5000, NA = 0.55, λ = 13.5 nm) enables single-exposure patterning at 8 nm half-pitch — eliminating multi-patterning overhead. Stochastic defect mitigation uses MLD (metal-containing EUV resist) with shot noise control. <strong>Ion implantation</strong> is replaced at leading nodes by in-situ epitaxial doping (As, P, B) in source/drain regions for abrupt junctions. RTA is replaced by millisecond laser spike anneal (LSA) for ultra-shallow junction activation without dopant diffusion.</p>
+        <div class="proc-diagram">
+          <div class="pd-title">// FEOL 2nm — KEY STEPS</div>
+          <div class="pd-flow">
+            <div class="pd-box" style="background:var(--red-l);border-color:var(--red);color:var(--red)">SiGe/Si Superlattice<br><span style="font-size:.58rem">Epi deposition</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--red-l);border-color:var(--red);color:var(--red)">High-NA EUV<br><span style="font-size:.58rem">NA=0.55 · 8nm HP</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--red-l);border-color:var(--red);color:var(--red)">SiGe Release<br><span style="font-size:.58rem">Nanosheet formation</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--red-l);border-color:var(--red);color:var(--red)">HfO₂ + Metal Gate<br><span style="font-size:.58rem">RMG · GAA wrap</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--green-l);border-color:var(--green);color:var(--green)">Epi S/D + LSA<br><span style="font-size:.58rem">In-situ doping</span></div>
+          </div>
+        </div>
+        <div class="pchips">
+          <span class="pch">GAA nanosheet transistor</span><span class="pch">High-NA EUV (NA=0.55)</span>
+          <span class="pch">HfO₂ high-k / metal gate</span><span class="pch">In-situ epitaxial doping</span>
+          <span class="pch">Laser spike anneal (LSA)</span><span class="pch">BSPDN (backside PDN)</span>
+          <span class="pch">2 nm node · 8 nm HP</span><span class="pch">DTCO / STCO design rules</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pstep">
+      <div class="pdot">03</div>
+      <div class="pbody">
+        <div class="ptag">MEOL — 2025</div>
+        <h3>MEOL: Ruthenium Contacts + Self-Aligned Vias</h3>
+        <p>At 2 nm node, conventional tungsten contacts are replaced by <strong>ruthenium (Ru)</strong> CVD fill — Ru offers lower bulk resistivity (7.6 µΩ·cm vs. W at 5.3 µΩ·cm but no barrier needed, allowing more Cu volume) and barrier-free integration, shrinking contact resistance below 1×10⁻⁹ Ω·cm². <strong>Self-aligned contacts (SAC)</strong> and <strong>self-aligned vias (SAV)</strong> eliminate the overlay margin penalty, enabling contacted poly pitch (CPP) below 45 nm. <strong>Backside power delivery network (BSPDN)</strong> — pioneered by Intel 20A/18A — routes power rails on the back of the wafer via buried power rails (BPR), freeing frontside routing for signal lines and improving IR drop and signal integrity.</p>
+        <div class="pchips">
+          <span class="pch">Ru / Co contact fill (no barrier)</span><span class="pch">Self-aligned contacts (SAC)</span>
+          <span class="pch">Self-aligned vias (SAV)</span><span class="pch">Backside PDN (BSPDN)</span>
+          <span class="pch">Buried power rails (BPR)</span><span class="pch">CPP &lt; 45 nm</span>
+          <span class="pch">Rc &lt; 1×10⁻⁹ Ω·cm²</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pstep">
+      <div class="pdot">04</div>
+      <div class="pbody">
+        <div class="ptag">BEOL — 2025</div>
+        <h3>BEOL: Low-Resistivity Cu + Air-Gap Dielectric + Hybrid Bonding</h3>
+        <p>Modern BEOL at 2 nm uses <strong>12–18 copper dual-damascene metal layers</strong> with ultra-low-k dielectric (k = 2.0–2.2, engineered porous SiCOH via PECVD). <strong>Air-gap dielectric</strong> (k ≈ 1.0) integration between metal lines at lower layers further reduces parasitic capacitance. Cobalt liners replace Ta/TaN at M0–M2 for reduced via resistance. Topmost redistribution layers (RDL) use thick Cu lines for power integrity. <strong>Hybrid bonding</strong> (Cu-Cu direct bonding at &lt;1 µm pitch) enables 3D chip stacking (e.g., TSMC SoIC, Intel Foveros) with 100× bandwidth density over conventional bumped interconnects. Final passivation: SiN + polyimide stack with laser-ablated UBM openings.</p>
+        <div class="proc-diagram">
+          <div class="pd-title">// BEOL DUAL-DAMASCENE — 2025</div>
+          <div class="pd-flow">
+            <div class="pd-box" style="background:var(--blue-l);border-color:var(--blue);color:var(--blue)">Porous low-k ILD<br><span style="font-size:.58rem">k = 2.0–2.2</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--blue-l);border-color:var(--blue);color:var(--blue)">EUV Via + Trench<br><span style="font-size:.58rem">Dual-damascene</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--blue-l);border-color:var(--blue);color:var(--blue)">Co liner + Cu seed<br><span style="font-size:.58rem">No TaN barrier M0-M2</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--blue-l);border-color:var(--blue);color:var(--blue)">Cu ECP fill<br><span style="font-size:.58rem">Bottom-up plating</span></div>
+            <div class="pd-arrow">→</div>
+            <div class="pd-box" style="background:var(--green-l);border-color:var(--green);color:var(--green)">CMP + Air-gap<br><span style="font-size:.58rem">k≈1.0 between lines</span></div>
+          </div>
+        </div>
+        <div class="pchips">
+          <span class="pch">12–18 Cu metal layers</span><span class="pch">Ultra-low-k (k = 2.0–2.2)</span>
+          <span class="pch">Air-gap dielectric (k ≈ 1.0)</span><span class="pch">Co liner (barrier-free M0-M2)</span>
+          <span class="pch">Hybrid bonding &lt;1 µm pitch</span><span class="pch">3D SoIC / Foveros</span>
+          <span class="pch">SiN + polyimide passivation</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pstep">
+      <div class="pdot">05</div>
+      <div class="pbody">
+        <div class="ptag">Wafer Test — 2025</div>
+        <h3>Die Sort: Wafer-Level AI-Assisted Yield Analysis</h3>
+        <p>Modern wafer-level testing uses <strong>contactor-less probe cards</strong> with 40,000+ simultaneous contact points at &lt;50 µm pitch for HBM and advanced package substrates. Test programs run at near-Vdd operating speeds using ATE (Automated Test Equipment — Teradyne UltraFLEX+, Advantest V93000). <strong>Machine learning yield models</strong> correlate spatial fail patterns on wafer maps to inline metrology signatures (CD, overlay, roughness heatmaps) — predicting root cause within minutes of sort completion. <strong>Adaptive bin limiting (ABL)</strong> identifies parametric outliers (PATs) that pass functional test but are latent reliability risks, rejecting them before shipment per AEC-Q100 automotive-grade criteria.</p>
+        <div class="pchips">
+          <span class="pch">40,000+ contact probe card</span><span class="pch">Teradyne UltraFLEX+ / Advantest V93000</span>
+          <span class="pch">ML wafer map correlation</span><span class="pch">Adaptive bin limiting (ABL)</span>
+          <span class="pch">AEC-Q100 PAT screening</span><span class="pch">Speed / power binning</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+</section>
+</div><!-- /process -->
 
-<!-- ═══════════════════════════════════════════
-     PAGE 3 — INSPECTION & DEFECTS
-═══════════════════════════════════════════ -->
-<div class="page" id="page-inspection">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Inspection & Defects</div>
-      <h2 class="sec-h">Stage-by-Stage Inspection<br>& Defect Analysis</h2>
-      <p class="sec-sub">Each manufacturing stage introduces distinct defect mechanisms requiring tailored inspection techniques. Select a stage below.</p>
+<!-- ══════════════════════════════════════════
+     INSPECTION
+══════════════════════════════════════════ -->
+<div class="page" id="page-inspect">
+<section class="sec">
+<div class="wrap">
+  <div class="lbl">Inspection &amp; Defects</div>
+  <h2 class="sh">Stage-by-Stage <em>Defect &amp; Inspection</em></h2>
+  <p class="sd">Each fabrication stage introduces distinct atomic-scale defect mechanisms. All techniques below operate at wafer level — not board level. Content reflects 2025 leading-node practice.</p>
+  <div class="stabs">
+    <button class="stab on" onclick="showS('wafer',this)">🧱 Wafer Prep</button>
+    <button class="stab" onclick="showS('feol',this)">⚙️ FEOL</button>
+    <button class="stab" onclick="showS('meol',this)">🔗 MEOL</button>
+    <button class="stab" onclick="showS('beol',this)">🔌 BEOL</button>
+    <button class="stab" onclick="showS('test',this)">🔬 Die Test</button>
+  </div>
 
-      <div class="stage-tabs">
-        <button class="stab on" onclick="showStage('wafer',this)">🧱 Wafer Preparation</button>
-        <button class="stab" onclick="showStage('feol',this)">⚙️ FEOL</button>
-        <button class="stab" onclick="showStage('meol',this)">🔗 MEOL</button>
-        <button class="stab" onclick="showStage('beol',this)">🔌 BEOL</button>
-        <button class="stab" onclick="showStage('pkg',this)">📦 Packaging</button>
+  <!-- WAFER -->
+  <div class="spanel on" id="sp-wafer">
+    <div class="lbl" style="margin:0 0 .35rem">Wafer Preparation — Surface &amp; Crystal Quality</div>
+    <p style="color:var(--ink2);font-size:.83rem;max-width:640px;line-height:1.78;margin-bottom:1.2rem">The polished silicon substrate must reach atomic perfection before any fabrication. EUV reflectance variation from sub-nm surface roughness creates printable CD errors — the substrate is the first process control point.</p>
+    <div class="ig">
+      <div class="icol"><div class="ch d">Defect Types</div>
+        <div class="di"><div class="dd"></div><div><strong>Crystal Originated Particles (COPs)</strong><p>Vacancy-cluster microvoids formed during Czochralski cooling. COPs at the wafer surface become gate oxide weak spots after thermal oxidation. Modern MCZ growth + N₂ co-doping suppresses COPs below detection limits (&lt;0.01/cm²).</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Surface Roughness Anomalies</strong><p>CMP non-uniformity creates local Ra/Rq deviations. At EUV (λ=13.5 nm), even 0.05 nm roughness variation modulates reflectance by &gt;0.1%, causing printable dose non-uniformity — spec is Ra &lt; 0.08 nm.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Metallic Contamination (Fe, Cu, Ni)</strong><p>Transition metal atoms from polishing slurry or handling introduce mid-gap traps. Fe &gt;10¹⁰ at/cm² degrades minority carrier lifetime from ms to µs, causing junction leakage. TXRF and TOFSIMS detect at ppb level.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Stacking Faults &amp; Dislocations</strong><p>Crystal slip during wire sawing or thermal stress creates planar defects in the ⟨111⟩ glide planes. Dislocations propagate into active device areas during FEOL thermal cycles, degrading carrier mobility.</p></div></div>
       </div>
-
-      <!-- WAFER -->
-      <div class="stage-panel on" id="sp-wafer">
-        <div class="sec-label" style="margin:0 0 .5rem">Wafer Preparation Stage</div>
-        <p style="color:var(--ink2);font-size:.85rem;max-width:620px;line-height:1.75;margin-bottom:1.5rem">
-          The incoming silicon substrate must meet atomic-scale surface quality specifications before any device fabrication begins. Any residual particle, roughness anomaly, or crystal defect at this stage propagates through every subsequent process layer.
-        </p>
-        <div class="insp-grid">
-          <div class="def-col">
-            <div class="col-head defects">Defect Types</div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Particles & Contamination</strong><p>Sub-micron particles (SiO₂, metals, organics) deposit on polished surfaces from slurry, environment, or handling. Even single particles cause lithography defects downstream.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Surface Roughness Anomalies</strong><p>CMP non-uniformity creates local Ra/Rq variations exceeding spec (&gt;0.15 nm Ra). Causes pattern distortion in extreme UV lithography due to reflectance variation.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Crystal Defects (Dislocations, Slips)</strong><p>Thermal stress during crystal growth or slicing causes edge dislocations and slip planes in the lattice. These propagate into active device regions, degrading carrier mobility and junction quality.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Metallic Contamination</strong><p>Fe, Cu, Na ion contamination from polishing equipment or handling introduces deep-level traps in the bandgap, reducing minority carrier lifetime and junction leakage.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Scratches & Pits</strong><p>Mechanical damage from wafer handling or dicing creates physical depressions. Pits with depth &gt;2 nm cause photoresist adhesion failures during spin-coating.</p></div></div>
-          </div>
-          <div class="insp-col">
-            <div class="col-head insp">Inspection Techniques</div>
-            <div class="insp-item"><strong>Optical Microscopy (Bright/Dark Field)</strong><p>Rapid survey at 1–100× magnification. Bright-field detects particles &gt;0.5 μm; dark-field illumination reveals surface topology and micro-scratches invisible in bright-field. Throughput: 100+ wafers/hour.</p></div>
-            <div class="insp-item"><strong>Scanning Electron Microscopy (SEM)</strong><p>High-resolution secondary-electron imaging at 0.5–2 nm resolution. Characterizes particle morphology and crystal surface defects. Requires conductive coating for insulating samples.</p></div>
-            <div class="insp-item"><strong>Atomic Force Microscopy (AFM)</strong><p>Contact or tapping-mode tip scans the surface to map topology with sub-Ångström vertical resolution. Quantifies Ra, Rq, and Rz roughness parameters. Typical scan area: 1–100 μm².</p></div>
-            <div class="insp-item"><strong>White Light Interferometry (WLI)</strong><p>Non-contact optical profiling using coherence scanning to measure surface height variations across large areas (&gt;mm²) at nanometer vertical precision without the scan-speed limitation of AFM.</p></div>
-            <div class="insp-item"><strong>Total Reflection X-Ray Fluorescence (TXRF)</strong><p>Detects metallic contamination at concentrations down to 10⁸–10⁹ atoms/cm² by measuring X-ray fluorescence from trace metals on the wafer surface. Essential for Fe, Cu, Na monitoring.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- FEOL -->
-      <div class="stage-panel" id="sp-feol">
-        <div class="sec-label" style="margin:0 0 .5rem">Front-End of Line (FEOL)</div>
-        <p style="color:var(--ink2);font-size:.85rem;max-width:620px;line-height:1.75;margin-bottom:1.5rem">
-          FEOL processes define all active semiconductor structures. The primary challenge is dimensional control at sub-10 nm scale, where a 0.5 nm CD variation causes measurable threshold voltage shift.
-        </p>
-        <div class="insp-grid">
-          <div class="def-col">
-            <div class="col-head defects">Defect Types</div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Lithography Errors (Bridging, Opens)</strong><p>Photoresist pattern failures cause adjacent features to merge (bridge) or target features to disappear (open). Driven by exposure dose, focus, and aberration variations in the scanner.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Critical Dimension (CD) Variation</strong><p>Gate length non-uniformity across wafer causes transistor Vth and Ion spread. Global CDU (3σ) targets below 1 nm at leading nodes. Driven by illumination uniformity and resist chemistry.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Overlay Errors</strong><p>Misregistration between consecutive lithography layers shifts gate-to-active alignment. At 5 nm node, overlay budget is ±2 nm total. Causes increased leakage or open contacts.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Pattern Distortion (OPE)</strong><p>Optical proximity effects cause corners to round and line-ends to shrink below their drawn dimensions. OPC pre-compensation is applied to mask data, but residual errors remain.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Gate Oxide Pinholes</strong><p>Dielectric breakdown sites in the gate oxide (SiO₂ or high-k HfO₂) cause gate leakage and eventual hard breakdown. Driven by particulate contamination or plasma damage.</p></div></div>
-          </div>
-          <div class="insp-col">
-            <div class="col-head insp">Inspection Techniques</div>
-            <div class="insp-item"><strong>CD-SEM (Critical Dimension SEM)</strong><p>Specialized SEM measures linewidths, pitch, and sidewall angles with &lt;0.5 nm reproducibility. Generates CDU maps across the wafer at dense sample points after each litho-etch step.</p></div>
-            <div class="insp-item"><strong>Optical Overlay Metrology</strong><p>Image-based overlay (IBO) or diffraction-based overlay (DBO) tools measure target-to-target misregistration. DBO offers &lt;0.1 nm tool-induced shift (TIS), preferred at leading nodes.</p></div>
-            <div class="insp-item"><strong>E-beam Inspection (eBI)</strong><p>Electron beam at 1–5 kV scans patterned wafers at high sensitivity, detecting non-visual defects like gate oxide pinholes and implant damage through voltage contrast imaging.</p></div>
-            <div class="insp-item"><strong>X-Ray Diffraction (XRD)</strong><p>Bragg's law (2d sinθ = nλ) governs diffraction from crystal planes. XRD measures thin-film thickness, crystal orientation, strain, and defect density in epitaxial layers and ion-implanted regions.</p></div>
-            <div class="insp-item"><strong>Scatterometry (OCD)</strong><p>Optical critical dimension (OCD) scatterometry fits measured Mueller matrix spectra to physical models to extract CD, sidewall angle, and layer thickness in seconds — non-destructive and high-throughput.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MEOL -->
-      <div class="stage-panel" id="sp-meol">
-        <div class="sec-label" style="margin:0 0 .5rem">Middle-End of Line (MEOL)</div>
-        <p style="color:var(--ink2);font-size:.85rem;max-width:620px;line-height:1.75;margin-bottom:1.5rem">
-          MEOL forms the critical contacts between active silicon and metal routing layers. Contact resistance and via uniformity directly determine circuit performance and power consumption.
-        </p>
-        <div class="insp-grid">
-          <div class="def-col">
-            <div class="col-head defects">Defect Types</div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Contact Resistance Non-Uniformity</strong><p>Poorly silicided or incompletely filled contacts exhibit high resistance (Rc &gt; 10 Ω). Caused by residual oxide at the Si-metal interface or tungsten seam voids from CVD step-coverage limitations.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Contact Misalignment</strong><p>Overlay error places the contact hole off-center from the source/drain silicide, increasing effective contact resistance and potentially breaching isolation to gate or well.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Via Defects (Voids, Incomplete Fill)</strong><p>Sub-conformal CVD fill in high aspect ratio (HAR) vias leaves seams or voids. Voids increase via resistance by 10–100× and are weak points for electromigration in reliability stress.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Pre-Metal Dielectric Cracks</strong><p>Mechanical stress in PMD (PECVD SiO₂ or FSG) causes micro-cracks at pattern corners, providing metal diffusion paths that cause inter-layer shorts during reliability cycling.</p></div></div>
-          </div>
-          <div class="insp-col">
-            <div class="col-head insp">Inspection Techniques</div>
-            <div class="insp-item"><strong>Electrical Test (Kelvin, Chain)</strong><p>Four-terminal (Kelvin) contact chain structures measure average and distribution of contact resistance. Failing chains trigger SEM cross-section to identify fill or silicide root cause.</p></div>
-            <div class="insp-item"><strong>SEM Cross-Section Analysis</strong><p>FIB-prepared cross-sections expose contact fill quality, sidewall profiles, and interface morphology. EDS confirms silicide phase (NiSi vs NiSi₂) and detects interfacial contamination.</p></div>
-            <div class="insp-item"><strong>X-Ray Inspection (AXI)</strong><p>Micro-CT reconstructs 3D contact arrays to identify systematic void patterns correlated to die location, indicating CVD loading or precursor delivery issues.</p></div>
-            <div class="insp-item"><strong>Voltage Contrast (e-beam)</strong><p>Floating or high-resistance contacts appear bright in voltage contrast imaging due to charge accumulation. Enables non-destructive mapping of open contacts across full-wafer.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- BEOL -->
-      <div class="stage-panel" id="sp-beol">
-        <div class="sec-label" style="margin:0 0 .5rem">Back-End of Line (BEOL)</div>
-        <p style="color:var(--ink2);font-size:.85rem;max-width:620px;line-height:1.75;margin-bottom:1.5rem">
-          BEOL copper interconnects carry signals and power across all circuit blocks. With 10–18 metal layers and billions of vias, even ppm-level defect rates translate to substantial functional failure probabilities.
-        </p>
-        <div class="insp-grid">
-          <div class="def-col">
-            <div class="col-head defects">Defect Types</div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Metal Layer Defects (Bridging, Opens)</strong><p>Copper damascene patterning failures produce adjacent-line shorts (bridging) or broken lines (opens). Residual barrier metal or incomplete copper fill are leading causes.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Electromigration Voids</strong><p>High current density (j &gt;10⁶ A/cm²) drives metal atom migration, forming voids at via bottoms (tensile side) and hillocks at via tops (compressive side). Mean time to failure (MTF) follows Black's equation.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Dielectric Delamination</strong><p>Low-k dielectrics (k &lt; 2.5) have poor mechanical strength. CMP shear stress or thermal cycling causes cohesive or adhesive failure at layer interfaces, exposing copper to corrosion.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Cu Corrosion / Oxidation</strong><p>Exposed copper oxidizes to Cu₂O in the presence of oxygen and moisture, increasing line resistance. Improper CMP endpoint or post-CMP cleaning leaves residual slurry that accelerates corrosion.</p></div></div>
-          </div>
-          <div class="insp-col">
-            <div class="col-head insp">Inspection Techniques</div>
-            <div class="insp-item"><strong>X-Ray Inspection (AXI / μ-CT)</strong><p>Non-destructive imaging of metal layer voids and inter-layer shorts. 3D CT at 0.5 μm voxel resolution enables volumetric void mapping across entire die cross-sections.</p></div>
-            <div class="insp-item"><strong>Infrared Microscopy</strong><p>Lock-in thermography detects localized heating at resistive defects (partial opens, high-R vias) with μW sensitivity. Photoemission microscopy locates gate-oxide and junction breakdown sites.</p></div>
-            <div class="insp-item"><strong>Reliability Stress Tests (EM, TDDB)</strong><p>Accelerated electromigration (EM) tests at elevated T and J extrapolate MTF to use conditions. Time-dependent dielectric breakdown (TDDB) applies elevated voltage to characterize oxide quality.</p></div>
-            <div class="insp-item"><strong>Acoustic Microscopy (SAM)</strong><p>Scanning acoustic microscopy detects delamination and voiding at material interfaces using high-frequency (50–200 MHz) ultrasound. Images time-of-flight reflections at each layer boundary.</p></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PACKAGING -->
-      <div class="stage-panel" id="sp-pkg">
-        <div class="sec-label" style="margin:0 0 .5rem">Back-End Packaging</div>
-        <p style="color:var(--ink2);font-size:.85rem;max-width:620px;line-height:1.75;margin-bottom:1.5rem">
-          Packaging introduces new failure modes at solder joints, bond wires, and material interfaces — and is the last inspection gate before the product reaches the customer.
-        </p>
-        <div class="insp-grid">
-          <div class="def-col">
-            <div class="col-head defects">Defect Types</div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Solder Joint Voids (BGA)</strong><p>Gas entrapment forms voids inside C4 or BGA solder balls during reflow. Voids &gt;25% of cross-section (IPC-7095) reduce mechanical strength and thermal conductance.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Bond Wire Cracking / Fatigue</strong><p>Thermal cycling fatigue cracks gold or copper bond wires at the heel (near die) or wedge (near substrate). Fine-pitch wire spacing increases arcing risk if cracks create shorts.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Underfill Delamination</strong><p>Poor underfill adhesion to die or substrate leaves air gaps at interfaces. Moisture absorption and thermal stress concentrate at delamination fronts, driving further propagation.</p></div></div>
-            <div class="def-item"><div class="def-dot"></div><div><strong>Package Cracks</strong><p>Mold compound cracks from popcorn effect (moisture expansion during rapid thermal cycling) or from mechanical handling stress. Allows moisture ingress to active circuitry.</p></div></div>
-          </div>
-          <div class="insp-col">
-            <div class="col-head insp">Inspection Techniques</div>
-            <div class="insp-item"><strong>X-Ray Inspection (2D / 3D CT)</strong><p>Industry-standard for BGA and flip-chip solder joint inspection. 3D CT reconstructs volumetric void maps. IPC-7095 defines void percentage acceptance criteria per ball.</p></div>
-            <div class="insp-item"><strong>Scanning Acoustic Microscopy (C-SAM)</strong><p>C-mode acoustic imaging maps delamination at die-attach, underfill, and mold interfaces. Amplitude and phase images distinguish air gap from normal bonded interfaces.</p></div>
-            <div class="insp-item"><strong>Automated Optical Inspection (AOI)</strong><p>High-resolution camera systems scan component placement, solder fillet geometry, and pad coverage after reflow. AI classifiers detect bridges, opens, and misalignment in real time.</p></div>
-            <div class="insp-item"><strong>Thermal Cycling / JEDEC Tests</strong><p>JEDEC JESD22-A104 thermal cycling (−55°C to +125°C) accelerates solder joint fatigue to predict field life. Daisy-chain structures monitor resistance continuously to detect first failure.</p></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE 4 — EQUIPMENT
-═══════════════════════════════════════════ -->
-<div class="page" id="page-equipment">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Equipment</div>
-      <h2 class="sec-h">Inspection Equipment</h2>
-      <p class="sec-sub">Detailed breakdown of each instrument — operating principle, specifications, advantages, and typical use cases.</p>
-
-      <div class="equip-grid">
-        <!-- SEM -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">SEM</div>
-            <div class="equip-name">Scanning Electron Microscopy</div>
-          </div>
-          <div class="equip-body">
-            <p>Focuses a finely tuned electron beam (&lt;1 nm) across the sample surface. Secondary electrons (SE) from inelastic scattering form topographic images; backscattered electrons (BSE) reveal compositional contrast. EDS X-ray detection provides elemental maps.</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Resolution</span><span>0.5 – 2 nm</span></div>
-              <div class="spec-row"><span>Voltage</span><span>0.5 – 30 kV</span></div>
-              <div class="spec-row"><span>Vacuum</span><span>10⁻⁵ – 10⁻⁸ Pa</span></div>
-              <div class="spec-row"><span>Magnification</span><span>10× – 500,000×</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>FEOL, MEOL, BEOL, FA</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>High resolution, EDS capability, large DOF, conductive and non-conductive samples</div>
-              <div class="cons"><strong>CONS</strong>Vacuum required, slow throughput, sample prep needed, charging on insulators</div>
-            </div>
-          </div>
-        </div>
-        <!-- AFM -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">AFM</div>
-            <div class="equip-name">Atomic Force Microscopy</div>
-          </div>
-          <div class="equip-body">
-            <p>A sharp tip (radius &lt;10 nm) on a cantilever scans the surface in contact, non-contact, or tapping mode. Tip-sample force deflects the cantilever; laser reflection on a photodetector records topology with sub-Ångström vertical resolution. Quantifies Ra, Rq, Rz, and Rsk roughness parameters.</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Vertical resolution</span><span>0.01 – 0.1 nm</span></div>
-              <div class="spec-row"><span>Lateral resolution</span><span>1 – 10 nm</span></div>
-              <div class="spec-row"><span>Scan area</span><span>1 nm² – 150×150 μm²</span></div>
-              <div class="spec-row"><span>Environment</span><span>Air, liquid, vacuum</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>Wafer Prep, CMP QC</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>True atomic resolution vertically, works in air/liquid, quantitative roughness, no vacuum</div>
-              <div class="cons"><strong>CONS</strong>Very small scan area, slow (mins/scan), tip wear, sensitive to vibration</div>
-            </div>
-          </div>
-        </div>
-        <!-- WLI -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">WLI</div>
-            <div class="equip-name">White Light Interferometry</div>
-          </div>
-          <div class="equip-body">
-            <p>Coherence scanning interferometry splits white light into reference and measurement beams. Interference occurs only where path lengths are matched (coherence gate). Scanning vertically records the peak contrast position for each pixel, building a full 3D surface map at nanometer vertical precision across a field of view of mm².</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Vertical resolution</span><span>0.1 – 1 nm</span></div>
-              <div class="spec-row"><span>Field of view</span><span>0.1 – 10 mm²</span></div>
-              <div class="spec-row"><span>Measurement speed</span><span>Seconds per field</span></div>
-              <div class="spec-row"><span>Lateral resolution</span><span>0.5 – 5 μm (diffraction-limited)</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>Wafer Prep, CMP, BEOL</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>Non-contact, large area, fast, true 3D surface, no sample prep</div>
-              <div class="cons"><strong>CONS</strong>Limited lateral resolution, requires reflective surfaces, sensitive to vibration</div>
-            </div>
-          </div>
-        </div>
-        <!-- Optical -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">OM</div>
-            <div class="equip-name">Optical Microscopy (Bright/Dark Field)</div>
-          </div>
-          <div class="equip-body">
-            <p>The workhorse of semiconductor inspection. Bright-field illumination detects particles and gross defects; dark-field illumination scatters light from surface irregularities, enhancing detection of micro-scratches and thin-film anomalies. Laser-based wafer scanners detect particles &gt;30 nm at &gt;100 wafers/hour throughput.</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Resolution</span><span>0.5 – 50 μm (diffraction)</span></div>
-              <div class="spec-row"><span>Throughput</span><span>100+ wafers/hour</span></div>
-              <div class="spec-row"><span>Particle sensitivity</span><span>&gt;30 nm (laser scanner)</span></div>
-              <div class="spec-row"><span>Magnification</span><span>5× – 1000×</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>Wafer Prep, FEOL, AOI</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>High throughput, non-destructive, low cost, intuitive, fast survey</div>
-              <div class="cons"><strong>CONS</strong>Diffraction-limited resolution, no sub-wavelength detail, 2D only</div>
-            </div>
-          </div>
-        </div>
-        <!-- XRD -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">XRD</div>
-            <div class="equip-name">X-Ray Diffraction</div>
-          </div>
-          <div class="equip-body">
-            <p>X-rays with wavelength λ comparable to crystal lattice spacing d diffract according to Bragg's Law: 2d sinθ = nλ. The diffraction pattern reveals crystal structure, orientation, strain, composition, and thin-film thickness. Grazing-incidence XRD (GIXRD) probes near-surface structure; high-resolution XRD (HRXRD) measures epitaxial layer quality.</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Bragg's Law</span><span>2d sinθ = nλ</span></div>
-              <div class="spec-row"><span>Wavelength (Cu Kα)</span><span>λ = 0.1541 nm</span></div>
-              <div class="spec-row"><span>Thickness range</span><span>1 nm – 10 μm</span></div>
-              <div class="spec-row"><span>Strain sensitivity</span><span>Δd/d ~ 10⁻⁵</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>FEOL, Epitaxy, Implant</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>Non-destructive, quantitative crystallography, strain & composition, bulk and thin films</div>
-              <div class="cons"><strong>CONS</strong>Requires crystalline order, large spot size (~mm), slow scan for full maps</div>
-            </div>
-          </div>
-        </div>
-        <!-- AXI -->
-        <div class="equip-card">
-          <div class="equip-header">
-            <div class="equip-abbr">AXI</div>
-            <div class="equip-name">Automated X-Ray Inspection</div>
-          </div>
-          <div class="equip-body">
-            <p>Microfocus X-ray sources (spot &lt;5 μm) penetrate packages to image hidden solder joints. 2D radiography provides planar views; 3D computed tomography reconstructs volumetric models for slice-by-slice analysis. Used extensively for BGA void inspection and wire-bond geometry verification.</p>
-            <div class="equip-spec">
-              <div class="spec-row"><span>Source spot size</span><span>1 – 10 μm</span></div>
-              <div class="spec-row"><span>Voltage</span><span>40 – 160 kV</span></div>
-              <div class="spec-row"><span>3D voxel size</span><span>5 – 50 μm</span></div>
-              <div class="spec-row"><span>Void standard</span><span>IPC-7095 &lt;25% area</span></div>
-              <div class="spec-row"><span>Use Stage</span><span>Packaging, BEOL</span></div>
-            </div>
-            <div class="pros-cons">
-              <div class="pros"><strong>PROS</strong>Non-destructive, hidden joint access, 3D capability, standards-based criteria</div>
-              <div class="cons"><strong>CONS</strong>Radiation safety, slower than AOI, 3D CT is time-consuming, limited resolution vs SEM</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Comparison Table -->
-      <div class="reveal" style="margin-top:3rem">
-        <div class="sec-label">Comparison</div>
-        <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:.3rem">Technique Comparison Table</h3>
-      </div>
-      <div class="comp-table-wrap reveal" style="transition-delay:.06s">
-        <table class="comp-table">
-          <thead>
-            <tr>
-              <th>Technique</th><th>Resolution</th><th>Throughput</th>
-              <th>Destructive</th><th>Cost (Relative)</th><th>Primary Use</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>SEM</td><td>0.5 – 2 nm</td><td>Low</td><td>No (FIB yes)</td><td>High</td><td>Failure Analysis, CD measurement</td></tr>
-            <tr><td>AFM</td><td>0.01 nm (z), 1 nm (xy)</td><td>Very Low</td><td>No</td><td>High</td><td>Surface roughness, nano-topography</td></tr>
-            <tr><td>WLI</td><td>0.1 nm (z), ~1 μm (xy)</td><td>Medium</td><td>No</td><td>Medium</td><td>CMP QC, large-area roughness</td></tr>
-            <tr><td>Optical (OM)</td><td>0.5 μm</td><td>Very High</td><td>No</td><td>Low</td><td>Particle survey, visual inspection</td></tr>
-            <tr><td>XRD</td><td>N/A (crystallographic)</td><td>Low</td><td>No</td><td>Medium</td><td>Crystal structure, thin-film thickness</td></tr>
-            <tr><td>AXI / CT</td><td>5 – 50 μm (CT)</td><td>Medium</td><td>No</td><td>High</td><td>BGA voids, hidden solder</td></tr>
-            <tr><td>AOI</td><td>10 – 25 μm</td><td>High</td><td>No</td><td>Medium</td><td>Solder joint, assembly inspection</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE 5 — DATA & ANALYSIS
-═══════════════════════════════════════════ -->
-<div class="page" id="page-data">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Data & Analysis</div>
-      <h2 class="sec-h">Measurement Data &<br>Analytical Methods</h2>
-      <p class="sec-sub">Quantitative metrics, formulas, and representative datasets from chipset inspection measurements.</p>
-
-      <!-- FORMULAS -->
-      <div class="reveal" style="margin-top:2.5rem">
-        <div class="sec-label">Key Formulas</div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-top:1rem" class="reveal" style="transition-delay:.06s">
-        <div class="formula-box">
-          <h4>Bragg's Law — XRD</h4>
-          <div class="formula"><em>2d</em> sin<em>θ</em> = <em>n</em>λ</div>
-          <p class="formula-desc"><b>d</b> = interplanar spacing (nm) · <b>θ</b> = Bragg angle (°) · <b>n</b> = reflection order · <b>λ</b> = X-ray wavelength (Cu Kα = 0.1541 nm). Used to identify crystal planes and measure thin-film lattice constants.</p>
-        </div>
-        <div class="formula-box">
-          <h4>Surface Roughness — AFM/WLI</h4>
-          <div class="formula">R<em>a</em> = (1/N) Σ|z<em>i</em>|</div>
-          <div class="formula">R<em>q</em> = √((1/N) Σz<em>i</em>²)</div>
-          <p class="formula-desc"><b>Ra</b> = arithmetic mean deviation · <b>Rq</b> = root-mean-square roughness (more sensitive to peaks/valleys) · <b>zi</b> = height deviation from mean · Rq ≈ 1.25 Ra for Gaussian surfaces.</p>
-        </div>
-        <div class="formula-box">
-          <h4>Electromigration — Black's Equation</h4>
-          <div class="formula">MTF = A · J<em>⁻ⁿ</em> · e<em>^(Ea/kT)</em></div>
-          <p class="formula-desc"><b>MTF</b> = mean time to failure · <b>J</b> = current density (A/cm²) · <b>n</b> ≈ 2 (Cu) · <b>Ea</b> ≈ 0.9 eV (Cu grain boundary) · <b>k</b> = Boltzmann constant · <b>T</b> = absolute temperature (K).</p>
-        </div>
-        <div class="formula-box">
-          <h4>Optical Resolution — Rayleigh Criterion</h4>
-          <div class="formula">R = 0.61<em>λ</em> / NA</div>
-          <p class="formula-desc"><b>R</b> = minimum resolvable feature (nm) · <b>λ</b> = illumination wavelength · <b>NA</b> = numerical aperture of the objective. At λ=193 nm, NA=1.35 (immersion): R ≈ 87 nm. EUV (13.5 nm): R ≈ 6 nm.</p>
-        </div>
-        <div class="formula-box">
-          <h4>Defect Density — Yield Model</h4>
-          <div class="formula">Y = e<em>^(-D₀·A)</em></div>
-          <p class="formula-desc">Simple Poisson yield model: <b>Y</b> = die yield · <b>D₀</b> = defect density (defects/cm²) · <b>A</b> = die area (cm²). Murphy's model replaces e⁻ᴰᵒᴬ with the convolution of defect distribution and die area for more accuracy.</p>
-        </div>
-        <div class="formula-box">
-          <h4>SEM Resolution — de Broglie</h4>
-          <div class="formula">λ = h / √(2m<em>eV</em>)</div>
-          <p class="formula-desc"><b>λ</b> = electron wavelength · <b>h</b> = Planck constant · <b>m</b> = electron mass · <b>e</b> = electron charge · <b>V</b> = accelerating voltage. At 10 kV: λ ≈ 0.012 nm — far below optical diffraction limits.</p>
-        </div>
-      </div>
-
-      <!-- CHARTS -->
-      <div class="sec-label reveal" style="margin:3rem 0 1rem">Interactive Charts</div>
-      <div class="chart-grid">
-        <div class="chart-card reveal">
-          <div class="chart-title">XRD Intensity vs. 2θ — Si(100) Wafer</div>
-          <div class="chart-box"><canvas id="xrdChart"></canvas></div>
-        </div>
-        <div class="chart-card reveal" style="transition-delay:.06s">
-          <div class="chart-title">Defect Density by Process Stage</div>
-          <div class="chart-box"><canvas id="defectChart"></canvas></div>
-        </div>
-        <div class="chart-card reveal" style="transition-delay:.04s">
-          <div class="chart-title">Surface Roughness Ra — CMP Progress</div>
-          <div class="chart-box"><canvas id="roughChart"></canvas></div>
-        </div>
-        <div class="chart-card reveal" style="transition-delay:.08s">
-          <div class="chart-title">Yield vs. Defect Density (Poisson Model)</div>
-          <div class="chart-box"><canvas id="yieldChart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- ROUGHNESS VIS -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap">
-        <div class="chart-card reveal">
-          <div class="chart-title">Surface Roughness Parameters</div>
-          <div class="roughness-vis" id="roughVis"></div>
-        </div>
-        <!-- DEFECT MAP -->
-        <div class="chart-card reveal" style="transition-delay:.05s">
-          <div class="chart-title">Simulated Wafer Defect Map</div>
-          <p style="font-size:.75rem;color:var(--ink3);margin-bottom:.8rem;font-family:var(--mono)">Click cells to toggle defect state</p>
-          <div class="defect-map" id="defectMap"></div>
-          <div style="display:flex;gap:1rem;margin-top:.8rem;font-family:var(--mono);font-size:.68rem;color:var(--ink3)">
-            <span style="display:flex;align-items:center;gap:.3rem"><span style="width:10px;height:10px;background:#1a6b3c;border-radius:2px;display:inline-block"></span>Clean</span>
-            <span style="display:flex;align-items:center;gap:.3rem"><span style="width:10px;height:10px;background:#b83a0a;border-radius:2px;display:inline-block"></span>Defect</span>
-            <span style="display:flex;align-items:center;gap:.3rem"><span style="width:10px;height:10px;background:#92560a;border-radius:2px;display:inline-block"></span>Marginal</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE 6 — PROJECTS
-═══════════════════════════════════════════ -->
-<div class="page" id="page-projects">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Projects</div>
-      <h2 class="sec-h">Research Projects</h2>
-      <p class="sec-sub">Hands-on implementations applying inspection theory to real datasets and automated systems.</p>
-
-      <div class="proj-grid">
-
-        <div class="proj-card reveal">
-          <div class="proj-top" style="background:var(--red)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--red)">AI / Computer Vision</div>
-            <h3>YOLO-based Real-Time Defect Detection</h3>
-            <p>Implemented YOLOv8 trained on a custom dataset of 12,000 labeled SEM images (solder bridges, opens, voids). Achieved 94.7% mAP@0.5 on held-out test set. Inference runs at 45 FPS on RTX 3060, enabling inline production deployment.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>mAP@0.5 = 94.7% · Precision = 96.1% · Recall = 93.2% · 45 FPS inference</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">YOLOv8</span>
-                <span class="proj-tag">PyTorch</span>
-                <span class="proj-tag">SEM images</span>
-                <span class="proj-tag">CUDA</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="proj-card reveal" style="transition-delay:.06s">
-          <div class="proj-top" style="background:var(--blue)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--blue)">Machine Learning</div>
-            <h3>SEM Image Classification with ResNet-50</h3>
-            <p>Transfer learning from ImageNet weights fine-tuned on 8 defect classes from the MIIC-SEM public dataset. Applied Grad-CAM visualization to verify model attention regions correspond to physically meaningful defect areas — critical for engineering trust.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>Top-1 Accuracy = 97.3% · Training on 6,400 images · Grad-CAM verified</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">ResNet-50</span>
-                <span class="proj-tag">TensorFlow</span>
-                <span class="proj-tag">Grad-CAM</span>
-                <span class="proj-tag">Transfer Learning</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="proj-card reveal" style="transition-delay:.1s">
-          <div class="proj-top" style="background:var(--green)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--green)">Signal Processing</div>
-            <h3>Surface Roughness Prediction from WLI Data</h3>
-            <p>Processed White Light Interferometry height maps using FFT power spectral density analysis to predict Ra, Rq, and Rsk without physical stylus measurement. Developed a MATLAB pipeline that processes 1000×1000 pixel height maps in under 2 seconds.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>Prediction error &lt;0.02 nm RMS for Ra/Rq · 10× faster than contact stylus methods</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">MATLAB</span>
-                <span class="proj-tag">FFT / PSD</span>
-                <span class="proj-tag">WLI Data</span>
-                <span class="proj-tag">ISO 25178</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="proj-card reveal" style="transition-delay:.04s">
-          <div class="proj-top" style="background:var(--amber)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--amber)">Data Analysis</div>
-            <h3>XRD Peak Fitting & Strain Analysis</h3>
-            <p>Developed a Python tool using scipy.optimize to fit Voigt profiles to XRD 2θ diffractograms, extracting peak position, FWHM, and integrated intensity. Applied to Si(100) and SiGe epitaxial layers to quantify in-plane compressive strain from lattice mismatch.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>Strain measurement precision Δd/d ≈ 2×10⁻⁵ · Automated batch processing of 200 scans</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">Python</span>
-                <span class="proj-tag">scipy</span>
-                <span class="proj-tag">matplotlib</span>
-                <span class="proj-tag">Bragg's Law</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="proj-card reveal" style="transition-delay:.08s">
-          <div class="proj-top" style="background:var(--purple)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--purple)">Statistical Analysis</div>
-            <h3>Yield Modeling & SPC Dashboard</h3>
-            <p>Built an interactive SPC dashboard (Python + Dash) tracking CD, overlay, and defect density KPIs across simulated production lots. Implemented Western Electric rules for out-of-control detection, Cp/Cpk computation, and automatic FMEA linkage when control limits are breached.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>Detected 3 simulated process drifts within 2 sigma · Real-time Cpk visualization</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">Python / Dash</span>
-                <span class="proj-tag">Pandas</span>
-                <span class="proj-tag">SPC / Cpk</span>
-                <span class="proj-tag">Plotly</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-        <div class="proj-card reveal" style="transition-delay:.12s">
-          <div class="proj-top" style="background:var(--red)"></div>
-          <div class="proj-body">
-            <div class="proj-cat" style="color:var(--red)">Hardware + Software</div>
-            <h3>Automated Microscope Scanning Platform</h3>
-            <p>Designed a low-cost automated XY scanning stage for optical microscopy using stepper motors, Arduino control, and OpenCV image stitching. Platform acquires 10×10 mosaic images and assembles a full-wafer composite at 1 μm effective resolution for particle mapping.</p>
-            <div class="proj-result">
-              <div class="proj-result-label">Key Result</div>
-              <p>Full 150 mm wafer scan in 12 min · Particle detection down to 2 μm · &lt;$300 build cost</p>
-            </div>
-            <div class="proj-meta">
-              <div class="proj-tags">
-                <span class="proj-tag">Arduino</span>
-                <span class="proj-tag">OpenCV</span>
-                <span class="proj-tag">Python</span>
-                <span class="proj-tag">Image Stitching</span>
-              </div>
-              <a href="#" class="proj-link">GitHub →</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE 7 — TEAM
-═══════════════════════════════════════════ -->
-<div class="page" id="page-team">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Contributors</div>
-      <h2 class="sec-h">Research Team</h2>
-      <p class="sec-sub">The group behind this academic research platform. Each member specializes in a complementary area of semiconductor inspection technology.</p>
-
-      <div class="team-grid">
-        <div class="team-card reveal">
-          <div class="team-av" style="background:linear-gradient(135deg,#b83a0a,#d46040)">AK</div>
-          <h3>Ahmet Karataş</h3>
-          <div class="role">Lead Researcher</div>
-          <div class="focus">AI Defect Detection</div>
-          <p class="contrib">YOLO & ResNet defect models, dataset curation, model deployment pipeline.</p>
-        </div>
-        <div class="team-card reveal" style="transition-delay:.05s">
-          <div class="team-av" style="background:linear-gradient(135deg,#1a4f7a,#2a70b0)">SY</div>
-          <h3>Selin Yıldız</h3>
-          <div class="role">Process Engineer</div>
-          <div class="focus">FEOL / XRD Analysis</div>
-          <p class="contrib">XRD peak fitting tool, FEOL inspection protocol documentation, CD-SEM analysis.</p>
-        </div>
-        <div class="team-card reveal" style="transition-delay:.1s">
-          <div class="team-av" style="background:linear-gradient(135deg,#1a5e35,#28924f)">MÖ</div>
-          <h3>Mert Öztürk</h3>
-          <div class="role">Software Engineer</div>
-          <div class="focus">SPC Dashboard / Web</div>
-          <p class="contrib">SPC dashboard, yield modeling tool, web platform development.</p>
-        </div>
-        <div class="team-card reveal" style="transition-delay:.05s">
-          <div class="team-av" style="background:linear-gradient(135deg,#4a1a7a,#7040b0)">ZD</div>
-          <h3>Zeynep Demir</h3>
-          <div class="role">Research Associate</div>
-          <div class="focus">SEM / Failure Analysis</div>
-          <p class="contrib">SEM cross-section analysis, FIB sample preparation, EDS elemental mapping.</p>
-        </div>
-        <div class="team-card reveal" style="transition-delay:.1s">
-          <div class="team-av" style="background:linear-gradient(135deg,#92560a,#c07828)">BÇ</div>
-          <h3>Berk Çelik</h3>
-          <div class="role">Data Scientist</div>
-          <div class="focus">WLI / Roughness</div>
-          <p class="contrib">WLI data processing pipeline, FFT roughness analysis, ISO 25178 parameter extraction.</p>
-        </div>
-        <div class="team-card reveal" style="transition-delay:.15s">
-          <div class="team-av" style="background:linear-gradient(135deg,#3a1a6b,#6040a0)">NŞ</div>
-          <h3>Prof. Nilüfer Şahin</h3>
-          <div class="role">Academic Supervisor</div>
-          <div class="focus">Semiconductor Physics</div>
-          <p class="contrib">Academic guidance, research direction, IPC standard interpretation, course framework.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     PAGE 8 — REFERENCES
-═══════════════════════════════════════════ -->
-<div class="page" id="page-refs">
-  <section class="sec">
-    <div class="container">
-      <div class="sec-label">Sources</div>
-      <h2 class="sec-h">References</h2>
-      <p class="sec-sub">Academic papers, IEEE standards, industry norms, and course materials underpinning this research platform.</p>
-
-      <div style="margin-top:2rem">
-        <div class="sec-label" style="margin-bottom:.8rem">IEEE Standards & Industry Norms</div>
-        <div class="ref-list">
-          <div class="ref-item"><div class="ref-n">01</div><div class="ref-t"><cite>IPC-A-610H — Acceptability of Electronic Assemblies. IPC Association Connecting Electronics Industries, 2020.</cite><span>Industry Standard · Assembly Acceptance Criteria</span></div></div>
-          <div class="ref-item"><div class="ref-n">02</div><div class="ref-t"><cite>IPC-7095D — Design and Assembly Process Implementation for BGAs. IPC, 2018.</cite><span>Industry Standard · BGA Solder Void Criteria (&lt;25%)</span></div></div>
-          <div class="ref-item"><div class="ref-n">03</div><div class="ref-t"><cite>IEEE Std 1149.1-2013 — IEEE Standard for Test Access Port and Boundary-Scan Architecture. IEEE, 2013.</cite><span>IEEE Standard · JTAG Boundary Scan</span></div></div>
-          <div class="ref-item"><div class="ref-n">04</div><div class="ref-t"><cite>JEDEC JESD22-A104E — Temperature Cycling. JEDEC Solid State Technology Association, 2014.</cite><span>Reliability Standard · Solder Joint Fatigue Testing</span></div></div>
-          <div class="ref-item"><div class="ref-n">05</div><div class="ref-t"><cite>ISO 25178-2:2021 — Geometrical Product Specifications: Surface Texture (Areal). ISO, 2021.</cite><span>Metrology Standard · Ra, Rq, Rsk Parameters</span></div></div>
-        </div>
-      </div>
-
-      <div style="margin-top:2rem">
-        <div class="sec-label" style="margin-bottom:.8rem">Academic Papers & Textbooks</div>
-        <div class="ref-list">
-          <div class="ref-item"><div class="ref-n">06</div><div class="ref-t"><cite>Goodfellow, I., Bengio, Y., &amp; Courville, A. Deep Learning. MIT Press, 2016. ISBN: 9780262035613.</cite><span>Textbook · CNN Foundations for Defect Classification</span></div></div>
-          <div class="ref-item"><div class="ref-n">07</div><div class="ref-t"><cite>Selvaraju, R.R. et al. "Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization." ICCV 2017, pp. 618–626.</cite><span>Conference Paper · Explainable AI for Inspection Models</span></div></div>
-          <div class="ref-item"><div class="ref-n">08</div><div class="ref-t"><cite>Goldstein, J.I. et al. Scanning Electron Microscopy and X-Ray Microanalysis, 4th ed. Springer, 2018. DOI: 10.1007/978-1-4939-6676-9.</cite><span>Textbook · SEM Operating Principles & EDS</span></div></div>
-          <div class="ref-item"><div class="ref-n">09</div><div class="ref-t"><cite>Cullity, B.D. &amp; Stock, S.R. Elements of X-Ray Diffraction, 3rd ed. Pearson, 2001.</cite><span>Textbook · Bragg's Law, Crystal Diffraction Analysis</span></div></div>
-          <div class="ref-item"><div class="ref-n">10</div><div class="ref-t"><cite>Black, J.R. "Electromigration — A Brief Survey and Some Recent Results." IEEE Trans. Electron Devices, vol. 16, no. 4, pp. 338–347, 1969.</cite><span>Journal Paper · Black's Equation — Electromigration MTF</span></div></div>
-          <div class="ref-item"><div class="ref-n">11</div><div class="ref-t"><cite>Redmon, J. &amp; Farhadi, A. "YOLOv3: An Incremental Improvement." arXiv:1804.02767, 2018.</cite><span>arXiv · YOLO Architecture for Real-Time Detection</span></div></div>
-          <div class="ref-item"><div class="ref-n">12</div><div class="ref-t"><cite>He, K. et al. "Deep Residual Learning for Image Recognition." CVPR 2016, pp. 770–778.</cite><span>Conference Paper · ResNet Architecture</span></div></div>
-          <div class="ref-item"><div class="ref-n">13</div><div class="ref-t"><cite>Quirk, M. &amp; Serda, J. Semiconductor Manufacturing Technology. Prentice Hall, 2001.</cite><span>Textbook · FEOL/BEOL Process Overview</span></div></div>
-        </div>
-      </div>
-
-      <div style="margin-top:2rem">
-        <div class="sec-label" style="margin-bottom:.8rem">Course Materials & Video Resources</div>
-        <div class="ref-list">
-          <div class="ref-item"><div class="ref-n">14</div><div class="ref-t"><cite>Course Lecture Notes — Semiconductor Device Fabrication &amp; Inspection. [University Name], 2024–2025.</cite><span>Lecture Notes · Primary Course Reference</span></div></div>
-          <div class="ref-item"><div class="ref-n">15</div><div class="ref-t"><cite>ASML. "How EUV Lithography Works." ASML Technology, online resource, 2023. asml.com.</cite><span>Industry Resource · EUV Lithography Overview</span></div></div>
-          <div class="ref-item"><div class="ref-n">16</div><div class="ref-t"><cite>Applied Materials. "Semiconductor Process Integration." Video Series, Applied Materials University, 2023.</cite><span>Video Resource · CMP, CVD, PVD Process Explanation</span></div></div>
-        </div>
-      </div>
-    </div>
-  </section>
-</div>
-
-<!-- ═══ FOOTER ═══ -->
-<footer>
-  <div class="foot-wrap">
-    <div>
-      <div class="foot-logo">ChipTrace</div>
-      <p class="foot-desc">Semiconductor Inspection Technology — Academic Research Platform. Electronics Engineering Department.</p>
-    </div>
-    <div class="foot-cols">
-      <div class="foot-col">
-        <h4>Sections</h4>
-        <a href="#" onclick="nav('home')">Home</a>
-        <a href="#" onclick="nav('process')">Manufacturing Process</a>
-        <a href="#" onclick="nav('inspection')">Inspection & Defects</a>
-        <a href="#" onclick="nav('equipment')">Equipment</a>
-      </div>
-      <div class="foot-col">
-        <h4>More</h4>
-        <a href="#" onclick="nav('data')">Data & Analysis</a>
-        <a href="#" onclick="nav('projects')">Projects</a>
-        <a href="#" onclick="nav('team')">Team</a>
-        <a href="#" onclick="nav('refs')">References</a>
+      <div class="icol"><div class="ch i">Inspection Techniques</div>
+        <div class="ii"><strong>Atomic Force Microscopy (AFM)</strong><p>Tapping-mode AFM with &lt;2 nm tip radius scans 10×10 µm² areas achieving 0.01 nm vertical resolution. Quantifies Ra, Rq, Rz, Rsk per ISO 25178. Post-CMP QC on every wafer lot. Modern fast-scan AFM (Bruker Dimension FastScan) runs 100×100 µm² in &lt;60 s.</p></div>
+        <div class="ii"><strong>White Light Interferometry (WLI)</strong><p>Coherence scanning interferometry (CSI) maps mm²-scale areas at 0.1 nm vertical resolution in seconds. Used for CMP uniformity mapping across full 300 mm wafer (edge-to-center Ra variation). Key tool for CMP endpoint optimization.</p></div>
+        <div class="ii"><strong>Laser Scatter Particle Inspection (KLA Surfscan SP7)</strong><p>266 nm UV laser scanner detects particles and COP defects down to 16 nm PSL equivalent size at 300 mm wafer throughput of 80+ wph. Oblique dark-field channels separate roughness from particles. Industry standard for incoming wafer qualification.</p></div>
+        <div class="ii"><strong>TXRF — Total Reflection X-Ray Fluorescence</strong><p>Grazing-incidence X-ray excites surface atoms; fluorescence photons are energy-resolved to identify and quantify Fe, Cu, Ni, Na at &lt;10⁹ at/cm² sensitivity. Non-destructive, monitors metal contamination after each wet clean step.</p></div>
       </div>
     </div>
   </div>
-  <div class="foot-bottom">
-    <p>© 2025 ChipTrace Research Group — Academic Use Only</p>
-    <span class="foot-mono">v2.0 — Semiconductor Inspection Study</span>
+
+  <!-- FEOL -->
+  <div class="spanel" id="sp-feol">
+    <div class="lbl" style="margin:0 0 .35rem">FEOL — GAA Transistor Defects (2 nm Node)</div>
+    <p style="color:var(--ink2);font-size:.83rem;max-width:640px;line-height:1.78;margin-bottom:1.2rem">At 2 nm node, FEOL defect mechanisms are dominated by EUV stochastic effects, nanosheet dimension control, and gate dielectric integrity. A 0.3 nm CD deviation shifts Vth by 10–30 mV — cascading to timing failure at GHz frequencies.</p>
+    <div class="ig">
+      <div class="icol"><div class="ch d">Defect Types</div>
+        <div class="di"><div class="dd"></div><div><strong>EUV Stochastic Defects (Microbridges / Microbreaks)</strong><p>At high-NA EUV, only 15–30 photons/nm² expose resist. Photon shot noise creates stochastic CD variation and random microbridges or microbreaks in lines and spaces — the primary yield limiter at 2 nm node.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Nanosheet Thickness Variation</strong><p>GAA nanosheet Si layer thickness non-uniformity (target 4 nm ±0.2 nm) directly modulates threshold voltage across a chip. Caused by SiGe/Si epitaxial growth rate variation and SiGe selective etch non-uniformity.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Gate Dielectric Breakdown (TDDB)</strong><p>HfO₂ high-k gate dielectric (EOT &lt; 0.5 nm) fails through time-dependent dielectric breakdown under electric field stress. Oxygen vacancy defects in HfO₂ create percolation paths. Characterized by TDDB test at elevated Vg.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Overlay Error (Multi-Layer)</strong><p>At 2 nm, the total multi-layer overlay budget is ±1.5 nm (3σ). Wafer distortion from chuck-induced stress, reticle heating, and non-linear wafer deformation all contribute. Exceeding spec causes gate-to-nanosheet misalignment.</p></div></div>
+      </div>
+      <div class="icol"><div class="ch i">Inspection Techniques</div>
+        <div class="ii"><strong>E-beam Multi-Column Inspection (ASML HMI eScan 1000)</strong><p>Latest multi-column e-beam wafer inspection systems (9–25 parallel beams) scan patterned wafers at 1–3 nm resolution and &gt;0.5 wafer/hour throughput. Detects EUV stochastic defects and voltage-contrast contact fails — the 2025 replacement for single-column tools.</p></div>
+        <div class="ii"><strong>CD-SEM with Machine Learning (Applied Materials Verity)</strong><p>Modern CD-SEM systems embed CNN-based contour extraction — measuring linewidth, LER, LWR, and sidewall angle automatically. Feeds real-time CDU maps to scanner APC for closed-loop correction within the lot.</p></div>
+        <div class="ii"><strong>High-Resolution XRD / XRR (Jordan Valley D1)</strong><p>Synchrotron-quality X-ray reflectometry (XRR) measures nanosheet SiGe/Si superlattice period, interface roughness, and SiGe content (Ge %) with &lt;0.01 nm thickness precision — critical for nanosheet uniformity QC.</p></div>
+        <div class="ii"><strong>Optical CD / Mueller Matrix Scatterometry (KLA SpectraShape 11k)</strong><p>Full Mueller matrix scatterometry captures 48 spectral elements at each site, enabling simultaneous extraction of nanosheet CD, height, spacing, and sidewall profile from a single non-destructive measurement in seconds.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEOL -->
+  <div class="spanel" id="sp-meol">
+    <div class="lbl" style="margin:0 0 .35rem">MEOL — Contact &amp; Interconnect Defects</div>
+    <p style="color:var(--ink2);font-size:.83rem;max-width:640px;line-height:1.78;margin-bottom:1.2rem">MEOL at 2 nm uses Ru/Co barrier-free contacts at sub-15 nm diameter. A single voided contact in a critical path raises its resistance above margin, causing a functional speed fail.</p>
+    <div class="ig">
+      <div class="icol"><div class="ch d">Defect Types</div>
+        <div class="di"><div class="dd"></div><div><strong>Contact Void / Incomplete Ru Fill</strong><p>Sub-15 nm Ru CVD contacts with aspect ratio &gt;10:1 are susceptible to bottom-up fill failure, creating keyhole voids that double contact resistance. ALD Ru nucleation layer uniformity is critical.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Contact-to-Gate Shorting</strong><p>Self-aligned contact (SAC) process relies on SiN gate spacer etch selectivity. If spacer is over-etched, contact metal shorts to gate metal — a catastrophic, non-reworkable fail pattern.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Buried Power Rail (BPR) Resistance</strong><p>Backside power delivery BPRs (W-filled, &lt;20 nm wide) embedded in the substrate must achieve &lt;5 Ω/µm sheet resistance. CMP dishing or incomplete W fill raises resistance, degrading IR drop margins.</p></div></div>
+      </div>
+      <div class="icol"><div class="ch i">Inspection Techniques</div>
+        <div class="ii"><strong>Voltage Contrast e-beam (Full-Wafer)</strong><p>Multi-beam eBI tools map open contacts and resistive vias across all die on a wafer without physical probing. High-resistance contacts charge under electron flood and appear bright in voltage contrast images — detecting voids and silicide failures non-destructively.</p></div>
+        <div class="ii"><strong>Kelvin 4-Terminal Resistance (On-Wafer)</strong><p>Test structures with isolated force/sense paths measure Ru contact resistance distribution with µΩ precision. Statistical Rc distributions across 300 mm wafer feed ALD process control for nucleation layer uniformity.</p></div>
+        <div class="ii"><strong>TEM Lamella + EELS (FIB-prepared)</strong><p>Transmission electron microscopy (TEM) with electron energy loss spectroscopy (EELS) resolves sub-nm contact fill quality, Ru grain structure, and interface chemistry at atomic resolution — the ultimate failure analysis tool for MEOL.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEOL -->
+  <div class="spanel" id="sp-beol">
+    <div class="lbl" style="margin:0 0 .35rem">BEOL — Interconnect Reliability &amp; Defects</div>
+    <p style="color:var(--ink2);font-size:.83rem;max-width:640px;line-height:1.78;margin-bottom:1.2rem">12–18 Cu interconnect layers with ultra-low-k and air-gap dielectric. Electromigration, TDDB, and delamination are the dominant BEOL reliability failure mechanisms at leading nodes.</p>
+    <div class="ig">
+      <div class="icol"><div class="ch d">Defect Types</div>
+        <div class="di"><div class="dd"></div><div><strong>Electromigration (EM) Void Nucleation</strong><p>At current densities &gt;10⁷ A/cm² in M0–M2 (local layers), Cu atom flux driven by electron wind creates voids at via-line interfaces. Governed by Black's Equation (MTF = A·J⁻ⁿ·e^(Ea/kT), Ea ≈ 0.9 eV for Cu grain boundary). Modern Co-capped Cu lines improve EM lifetime 3–5× over SiCN-capped.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>TDDB — Low-k Dielectric Breakdown</strong><p>Copper ion drift through porous ultra-low-k dielectric (k = 2.0–2.2) under electric field forms Cu⁺ filaments causing time-dependent dielectric breakdown. Air-gap integration (k ≈ 1.0) reduces capacitance but introduces mechanical fragility.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Air-Gap Collapse / Delamination</strong><p>Porous low-k and air-gap structures are mechanically fragile (E &lt; 5 GPa). CMP overburden pressure or dicing stress causes cohesive fracture. CMP endpoint control and dicing street width are critical process parameters.</p></div></div>
+      </div>
+      <div class="icol"><div class="ch i">Inspection Techniques</div>
+        <div class="ii"><strong>X-Ray Micro-CT (Zeiss Xradia 810 Ultra)</strong><p>Lab-source X-ray CT at 50 nm voxel resolution non-destructively images Cu void distribution across BEOL layers. 3D void volume fraction and spatial correlation to layout pattern density enables systematic vs. random failure discrimination.</p></div>
+        <div class="ii"><strong>Lock-In Infrared Thermography</strong><p>Synchronous IR detection at 3–5 µm wavelength localizes resistive heating from partial Cu opens or high-R vias with µW power sensitivity and &lt;1 µm spatial resolution. Combined with OBIRCH (optical beam induced resistance change) for sub-µm fault isolation.</p></div>
+        <div class="ii"><strong>Accelerated EM / TDDB Stress (JEDEC)</strong><p>JEDEC JESD61 EM tests at 3× nominal current density and 200–300°C. Weibull failure distribution parameters (β, η) extrapolate MTF to 10-year field use conditions. TDDB uses elevated Vdd stress at multiple temperatures for E-model or 1/E-model extrapolation.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIE TEST -->
+  <div class="spanel" id="sp-test">
+    <div class="lbl" style="margin:0 0 .35rem">Wafer-Level Die Test — 2025 Practice</div>
+    <p style="color:var(--ink2);font-size:.83rem;max-width:640px;line-height:1.78;margin-bottom:1.2rem">Wafer probe test is the final inline quality gate before dicing. Modern systems contact 50,000+ pads simultaneously and use AI to predict reliability escapes not visible to functional test.</p>
+    <div class="ig">
+      <div class="icol"><div class="ch d">Failure Modes</div>
+        <div class="di"><div class="dd"></div><div><strong>Parametric Outliers (PATs / SAT)</strong><p>Dies passing all functional tests but with Vth, Ion, or leakage outside statistical 6σ limits are "parametric outliers." AEC-Q100 PAT screening removes them — they are latent reliability risks that fail early under field stress even though they pass at sort.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Speed Binning Failures</strong><p>Ring oscillator and critical path timing tests bin dies into speed grades (e.g., 3.2 GHz / 3.6 GHz / 4.0 GHz). Dies failing the top bin are sold as lower-performance SKUs — yield learning directly impacts product portfolio revenue mix.</p></div></div>
+        <div class="di"><div class="dd"></div><div><strong>Scan / BIST Functional Failures</strong><p>ATPG-generated scan patterns (targeting &gt;99.9% stuck-at fault coverage) detect logic defects from FEOL and BEOL process excursions. BIST engines test on-die SRAM, PLLs, and SerDes at full-speed without external ATE pattern bandwidth.</p></div></div>
+      </div>
+      <div class="icol"><div class="ch i">Test Methods</div>
+        <div class="ii"><strong>High-Speed Wafer Probe (Cascade / FormFactor)</strong><p>Advanced probe cards with 50,000+ spring-tip contacts at &lt;50 µm pitch contact all pads simultaneously. RF probing at mm-wave frequencies (up to 110 GHz) characterizes HBM PHY and SerDes channels on-wafer before singulation.</p></div>
+        <div class="ii"><strong>ML Yield Signature Analysis</strong><p>Machine learning models correlate wafer map failure spatial signatures to inline SPC data (CD, overlay, roughness heatmaps from each process step), identifying root cause within minutes. Reduces yield excursion response time from days to hours.</p></div>
+        <div class="ii"><strong>Adaptive Test (AT) — Test Time Reduction</strong><p>Adaptive test uses early test results (fast tests first) to probabilistically skip unlikely failures — reducing test time 20–40% without coverage loss. Gaussian process models predict binning from subset of measurements, critical for reducing cost-of-test at high volumes.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div><!-- /inspect -->
+
+<!-- ══════════════════════════════════════════
+     EQUIPMENT
+══════════════════════════════════════════ -->
+<div class="page" id="page-equip">
+<section class="sec">
+<div class="wrap">
+  <div class="lbl">Equipment</div>
+  <h2 class="sh">Semiconductor Inspection<br><em>Equipment — 2025 Systems</em></h2>
+  <p class="sd">All instruments below operate at wafer level. Equipment models and specifications reflect 2025 high-volume manufacturing deployment at leading logic foundries.</p>
+  <div class="eqgrid">
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--red)">SEM / CD-SEM</div><div class="eqname">Scanning / Critical Dimension Electron Microscopy</div></div>
+      <div class="eqb">
+        <p>Focused electron beam (0.5–2 nm) scans the surface; secondary and backscattered electrons form images. CD-SEM (e.g., Applied Materials Verity CD, Hitachi CG6300) operates at &lt;1 kV to minimize resist shrinkage, using CNN-based contour extraction for automated CDU map generation.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>Spatial resolution</span><span>0.5 – 2 nm (SEM) / &lt;0.5 nm (CD-SEM)</span></div>
+          <div class="eqrow"><span>Beam voltage (CD)</span><span>300 V – 800 V (low damage)</span></div>
+          <div class="eqrow"><span>CDU precision</span><span>&lt;0.3 nm 3σ (2025 target)</span></div>
+          <div class="eqrow"><span>Throughput (CD)</span><span>150–200 sites/hour</span></div>
+          <div class="eqrow"><span>2025 system</span><span>Applied Materials Verity / Hitachi CG6300</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>Direct imaging, nm CD precision, EDS elemental analysis, APC-ready output</div>
+          <div class="con"><strong>CONS</strong>Slow throughput vs. optical, resist shrinkage, charging on dielectrics</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--blue)">AFM</div><div class="eqname">Atomic Force Microscopy — Fast-Scan Systems</div></div>
+      <div class="eqb">
+        <p>Tapping-mode cantilever tip (&lt;2 nm radius) measures surface topology with 0.01 nm vertical resolution. Modern fast-scan systems (Bruker Dimension FastScan, Oxford Asylum Cypher) scan 100×100 µm² in under 60 seconds — enabling inline CMP QC. Peak Force QNM mode maps mechanical stiffness alongside roughness.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>Vertical resolution</span><span>0.01 nm (sub-Ångström)</span></div>
+          <div class="eqrow"><span>Lateral resolution</span><span>1 – 5 nm</span></div>
+          <div class="eqrow"><span>Scan speed (fast)</span><span>100×100 µm² &lt;60 sec</span></div>
+          <div class="eqrow"><span>2025 system</span><span>Bruker FastScan / Oxford Cypher</span></div>
+          <div class="eqrow"><span>Use stage</span><span>Wafer Prep, CMP, BEOL roughness</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>True atomic vertical res., quantitative Ra/Rq/Rsk, air-capable, mechanical mapping</div>
+          <div class="con"><strong>CONS</strong>Small area vs. WLI, tip wear, vibration isolation required</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--teal)">WLI / CSI</div><div class="eqname">White Light / Coherence Scanning Interferometry</div></div>
+      <div class="eqb">
+        <p>Coherence scanning interferometry (e.g., Bruker ContourGT-X, Zygo Nexview NX2) maps full-wafer surface height at 0.1 nm vertical resolution across mm² fields of view. Modern automated systems map 300 mm wafer roughness in a single automated scan run — the primary CMP endpoint and uniformity tool.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>Vertical resolution</span><span>0.1 nm (sub-Ångström in PSI mode)</span></div>
+          <div class="eqrow"><span>Field of view</span><span>up to 10×10 mm² per objective</span></div>
+          <div class="eqrow"><span>Lateral resolution</span><span>0.4 – 5 µm (diffraction-limited)</span></div>
+          <div class="eqrow"><span>2025 system</span><span>Zygo Nexview NX2 / Bruker ContourGT-X</span></div>
+          <div class="eqrow"><span>Use stage</span><span>Post-CMP QC, wafer bow/warp</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>Non-contact, fast large-area, 3D surface map, ISO 25178 output, wafer bow/warp</div>
+          <div class="con"><strong>CONS</strong>Diffraction-limited lateral res., requires reflective surface, less sensitive than AFM vertically</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--amber)">HRXRD / XRR</div><div class="eqname">High-Resolution X-Ray Diffraction / Reflectometry</div></div>
+      <div class="eqb">
+        <p>HRXRD (e.g., Jordan Valley D1, Malvern Panalytical Empyrean) uses Ge crystal monochromators to achieve arc-second angular resolution. XRR (X-ray reflectometry) precisely measures thin film thickness, density, and interface roughness. Critical for GAA nanosheet SiGe/Si superlattice characterization and HfO₂ gate dielectric thickness control.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>Bragg's Law</span><span>2d sinθ = nλ (Cu Kα: 0.15406 nm)</span></div>
+          <div class="eqrow"><span>Angular precision</span><span>&lt;1 arc-second (HRXRD)</span></div>
+          <div class="eqrow"><span>XRR thickness range</span><span>0.3 nm – 500 nm</span></div>
+          <div class="eqrow"><span>Ge content (SiGe)</span><span>±0.5% precision</span></div>
+          <div class="eqrow"><span>2025 system</span><span>Jordan Valley D1 / PANalytical Empyrean</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>Non-destructive, strain/composition/thickness simultaneously, true crystallography</div>
+          <div class="con"><strong>CONS</strong>mm-scale spot, slow mapping, requires crystalline order</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--purple)">eBI / eScan</div><div class="eqname">Multi-Beam E-beam Inspection (2025)</div></div>
+      <div class="eqb">
+        <p>ASML HMI eScan 1000 and Applied Materials SEMVision systems deploy 9–25 parallel electron beams simultaneously — achieving &gt;0.5 wph inspection throughput at 3 nm resolution. Voltage contrast mode detects open contacts and resistive vias non-destructively. Replaces single-beam systems as the primary patterned wafer inspection tool at 2 nm node.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>Resolution</span><span>3 – 5 nm (production mode)</span></div>
+          <div class="eqrow"><span>Throughput</span><span>&gt;0.5 wph (multi-beam)</span></div>
+          <div class="eqrow"><span>Beam columns</span><span>9 – 25 parallel beams</span></div>
+          <div class="eqrow"><span>Detection mode</span><span>SE imaging + voltage contrast</span></div>
+          <div class="eqrow"><span>2025 system</span><span>ASML HMI eScan 1000 / Applied Materials SEMVision</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>High sensitivity to sub-10nm defects, voltage contrast, no physical probe, full-wafer scan</div>
+          <div class="con"><strong>CONS</strong>Expensive, throughput still lower than optical, charge effects on insulators</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eqcard">
+      <div class="eqh"><div class="eqabbr" style="color:var(--green)">OCD / Scatterometry</div><div class="eqname">Optical CD / Mueller Matrix Scatterometry</div></div>
+      <div class="eqb">
+        <p>Full Mueller matrix scatterometry (KLA SpectraShape 11k, Nova T600) measures all 16 spectral Mueller matrix elements at each site, enabling simultaneous extraction of CD, sidewall angle, height, and overlay from a single 30-second non-destructive measurement. RCWA (rigorous coupled-wave analysis) models fit measured spectra. The dominant high-throughput metrology for GAA nanosheet CD control at 2 nm.</p>
+        <div class="eqspec">
+          <div class="eqrow"><span>CD sensitivity</span><span>&lt;0.05 nm (3σ TDU)</span></div>
+          <div class="eqrow"><span>Measurement time</span><span>20 – 40 sec / site</span></div>
+          <div class="eqrow"><span>Measurands</span><span>CD, SWA, height, overlay simultaneously</span></div>
+          <div class="eqrow"><span>Wavelength range</span><span>190 – 900 nm</span></div>
+          <div class="eqrow"><span>2025 system</span><span>KLA SpectraShape 11k / Nova T600</span></div>
+        </div>
+        <div class="pc-grid">
+          <div class="pro"><strong>PROS</strong>Fastest inline metrology, non-destructive, multi-parameter, no beam damage, APC-ready</div>
+          <div class="con"><strong>CONS</strong>Model-dependent, indirect (not imaging), requires periodic targets</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- Comparison -->
+  <div class="rv" style="margin-top:2.8rem"><div class="lbl">Comparison</div><h3 style="font-size:1.1rem;font-weight:600;margin-bottom:.3rem">Wafer-Level Technique Comparison (2025)</h3></div>
+  <div class="ctw rv" style="transition-delay:.05s">
+    <table class="ct">
+      <thead><tr><th>Technique</th><th>Vertical Res.</th><th>Lateral Res.</th><th>Throughput</th><th>Destructive?</th><th>2025 Primary Use</th></tr></thead>
+      <tbody>
+        <tr><td>CD-SEM</td><td>—</td><td>&lt;0.5 nm</td><td>Medium</td><td>No</td><td>Gate length, LER, CDU map → scanner APC</td></tr>
+        <tr><td>AFM (fast-scan)</td><td>0.01 nm</td><td>1–5 nm</td><td>Medium</td><td>No</td><td>Post-CMP Ra/Rq, nanosheet roughness</td></tr>
+        <tr><td>WLI / CSI</td><td>0.1 nm</td><td>~0.5 µm</td><td>High</td><td>No</td><td>CMP uniformity, wafer bow/warp, BEOL</td></tr>
+        <tr><td>HRXRD / XRR</td><td>—</td><td>~mm</td><td>Low</td><td>No</td><td>SiGe Ge%, nanosheet thickness, HfO₂</td></tr>
+        <tr><td>eBI (multi-beam)</td><td>—</td><td>3–5 nm</td><td>Medium</td><td>No</td><td>Patterned wafer, voltage contrast, contacts</td></tr>
+        <tr><td>OCD / Scatterometry</td><td>—</td><td>—</td><td>Very High</td><td>No</td><td>Inline CD/overlay/SWA all-in-one</td></tr>
+        <tr><td>TXRF</td><td>—</td><td>~mm</td><td>Medium</td><td>No</td><td>Metal contamination (Fe, Cu, Ni) &lt;10⁹ at/cm²</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+</div><!-- /equip -->
+
+<!-- ══════════════════════════════════════════
+     DATA & ANALYSIS
+══════════════════════════════════════════ -->
+<div class="page" id="page-data">
+<section class="sec">
+<div class="wrap">
+  <div class="lbl">Data &amp; Analysis</div>
+  <h2 class="sh">Measurement Data &amp;<br><em>Analytical Methods</em></h2>
+  <p class="sd">Core formulas, modern semiconductor-specific metrics, and representative measurement datasets from wafer-level inspection. All equations reflect current foundry practice.</p>
+
+  <div class="lbl rv" style="margin:0 0 .7rem">Key Formulas</div>
+  <div class="fgrid rv" style="transition-delay:.04s">
+    <div class="fbox"><h4>Bragg's Law — XRD / XRR</h4>
+      <div class="fm"><em>2d</em> sinθ = <em>n</em>λ</div>
+      <p class="fd"><b>d</b> = interplanar spacing · <b>θ</b> = Bragg angle · <b>n</b> = diffraction order · <b>λ</b> = X-ray wavelength (Cu Kα = 0.15406 nm). Si(100) 2θ peak at 69.1°. Used for SiGe Ge% measurement via Vegard's Law and HfO₂ crystal phase identification in GAA gate stacks.</p>
+    </div>
+    <div class="fbox"><h4>Surface Roughness — AFM / WLI</h4>
+      <div class="fm">R<em>a</em> = (1/N)·Σ|z<em>i</em>|</div>
+      <div class="fm">R<em>q</em> = √( (1/N)·Σz<em>i</em>² )</div>
+      <p class="fd"><b>Ra</b> = arithmetic mean deviation · <b>Rq</b> = RMS roughness (more sensitive to isolated peaks) · ISO 25178 standard. Polished Si target: Ra &lt;0.08 nm. Post-CMP Cu BEOL: Ra &lt;0.3 nm. EUV mask blank: Ra &lt;0.06 nm.</p>
+    </div>
+    <div class="fbox"><h4>Optical Resolution — Rayleigh (Lithography)</h4>
+      <div class="fm">R = k<em>₁</em> · λ / NA</div>
+      <p class="fd"><b>k₁</b> = process factor (0.25–0.5) · <b>λ</b> = wavelength · <b>NA</b> = numerical aperture. High-NA EUV: λ=13.5 nm, NA=0.55, k₁=0.33 → R = 8.1 nm half-pitch. This is the fundamental limit driving the transition from 0.33 NA to 0.55 NA EUV (ASML EXE:5000).</p>
+    </div>
+    <div class="fbox"><h4>Electromigration — Black's Equation</h4>
+      <div class="fm">MTF = A · J<em>⁻ⁿ</em> · e<em>^(Ea/kT)</em></div>
+      <p class="fd"><b>MTF</b> = mean time to failure · <b>J</b> = current density · <b>n</b> ≈ 2 (Cu, grain boundary) · <b>Ea</b> ≈ 0.9 eV · <b>k</b> = Boltzmann const · <b>T</b> = temperature (K). Co-capped Cu increases Ea to ~1.1 eV, extending MTF 3–5× over SiCN cap.</p>
+    </div>
+    <div class="fbox"><h4>Semiconductor Yield — Poisson Model</h4>
+      <div class="fm">Y = e<em>^(−D₀·A)</em></div>
+      <p class="fd"><b>Y</b> = die yield · <b>D₀</b> = random defect density (def/cm²) · <b>A</b> = die area (cm²). 2 nm node: target D₀ &lt;0.05/cm², A ≈ 100 mm² → Y = e^(−0.05) ≈ 95%. Murphy's negative-binomial model used in practice for non-Poisson (clustered) defect distributions.</p>
+    </div>
+    <div class="fbox"><h4>Scherrer Equation — XRD Crystal Size</h4>
+      <div class="fm">D = <em>K</em>λ / (β cosθ)</div>
+      <p class="fd"><b>D</b> = mean crystallite size (nm) · <b>K</b> = shape factor (0.9–1.0) · <b>λ</b> = X-ray wavelength · <b>β</b> = peak FWHM (radians) · <b>θ</b> = Bragg angle. Applied to measure Cu grain size in BEOL interconnects — larger grains = lower Cu resistivity and better EM resistance.</p>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="lbl rv" style="margin:2.8rem 0 .7rem">Interactive Charts</div>
+  <div class="cgrid rv" style="transition-delay:.04s">
+    <div class="cc"><div class="ctitle">XRD — Si(100) + SiGe Epitaxial Layer</div><div class="cbox"><canvas id="xrdC"></canvas></div></div>
+    <div class="cc"><div class="ctitle">Defect Density by Fab Stage (2 nm node)</div><div class="cbox"><canvas id="defC"></canvas></div></div>
+    <div class="cc"><div class="ctitle">Surface Roughness Ra vs CMP Time</div><div class="cbox"><canvas id="rghC"></canvas></div></div>
+    <div class="cc"><div class="ctitle">Yield vs Defect Density — Poisson Model</div><div class="cbox"><canvas id="yldC"></canvas></div></div>
+  </div>
+
+  <!-- Roughness + Wafer Map -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.1rem" class="rv" style="transition-delay:.08s">
+    <div class="cc">
+      <div class="ctitle">Roughness Parameters — Post-CMP (ISO 25178)</div>
+      <div class="rvbar" id="roughBars"></div>
+    </div>
+    <div class="cc">
+      <div class="ctitle">300 mm Wafer Die Map (click to toggle)</div>
+      <p style="font-family:var(--mono);font-size:.64rem;color:var(--ink3);margin-bottom:.65rem">Simulated die yield map — click cells to toggle state</p>
+      <div class="wfmap" id="waferMap"></div>
+      <div class="map-legend">
+        <div class="ml"><div class="ml-dot" style="background:var(--green)"></div>Good die</div>
+        <div class="ml"><div class="ml-dot" style="background:var(--red)"></div>Defective</div>
+        <div class="ml"><div class="ml-dot" style="background:var(--amber)"></div>Marginal/PAT</div>
+        <div class="ml"><div class="ml-dot" style="background:var(--border)"></div>Edge exclusion</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+</div><!-- /data -->
+
+<!-- ══════════════════════════════════════════
+     PROJECTS (empty — add yours)
+══════════════════════════════════════════ -->
+<div class="page" id="page-projects">
+<section class="sec">
+<div class="wrap">
+  <div class="lbl">Projects</div>
+  <h2 class="sh">Research <em>Projects</em></h2>
+  <p class="sd">This section will showcase projects related to semiconductor manufacturing and inspection technology. Projects will be added soon.</p>
+
+  <div class="proj-empty">
+    <div class="proj-empty-icon">🔬</div>
+    <h3>Projects Coming Soon</h3>
+    <p>Add your semiconductor inspection research projects here — defect detection models, XRD analysis tools, surface roughness pipelines, yield simulation scripts, and more.</p>
+  </div>
+
+  <!-- Ghost template cards to show structure -->
+  <p style="font-family:var(--mono);font-size:.68rem;color:var(--ink3);margin-top:2rem;margin-bottom:.5rem;letter-spacing:.06em;text-transform:uppercase">// Each project card will follow this structure:</p>
+  <div class="proj-template">
+    <div class="pt-card">
+      <div class="pt-top"></div>
+      <div class="pt-line"></div>
+      <div class="pt-line short"></div>
+      <div style="height:40px;background:var(--bg2);border-radius:4px;margin:.5rem 0"></div>
+      <div class="pt-tags"><div class="pt-tag"></div><div class="pt-tag"></div><div class="pt-tag"></div></div>
+    </div>
+    <div class="pt-card">
+      <div class="pt-top"></div>
+      <div class="pt-line"></div>
+      <div class="pt-line short"></div>
+      <div style="height:40px;background:var(--bg2);border-radius:4px;margin:.5rem 0"></div>
+      <div class="pt-tags"><div class="pt-tag"></div><div class="pt-tag"></div><div class="pt-tag"></div></div>
+    </div>
+    <div class="pt-card">
+      <div class="pt-top"></div>
+      <div class="pt-line"></div>
+      <div class="pt-line short"></div>
+      <div style="height:40px;background:var(--bg2);border-radius:4px;margin:.5rem 0"></div>
+      <div class="pt-tags"><div class="pt-tag"></div><div class="pt-tag"></div><div class="pt-tag"></div></div>
+    </div>
+  </div>
+</div>
+</section>
+</div><!-- /projects -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="fw">
+    <div><div class="flogo">SemiTrace</div><p class="fdesc">Semiconductor Chip Manufacturing &amp; Inspection Technology — Academic Platform. 2025 State of the Art.</p></div>
+    <div class="fcols">
+      <div class="fcol"><h4>Sections</h4>
+        <a onclick="go('home')">Home</a>
+        <a onclick="go('process')">Manufacturing</a>
+        <a onclick="go('inspect')">Inspection</a>
+        <a onclick="go('equip')">Equipment</a>
+      </div>
+      <div class="fcol"><h4>More</h4>
+        <a onclick="go('data')">Data &amp; Analysis</a>
+        <a onclick="go('projects')">Projects</a>
+      </div>
+    </div>
+  </div>
+  <div class="fb">
+    <p>© 2025 SemiTrace · Semiconductor Manufacturing &amp; Inspection · Academic Use Only</p>
+    <span class="fmono">v4.0 · 2 nm Node · GAA · High-NA EUV · No PCB Content</span>
   </div>
 </footer>
 
-<!-- ═══ SCRIPTS ═══ -->
 <script>
 /* ── NAVIGATION ── */
-const pages=['home','process','inspection','equipment','data','projects','team','refs'];
-function nav(id,skipScroll){
-  pages.forEach(p=>{
-    document.getElementById('page-'+p)?.classList.remove('active');
-    const nl=document.getElementById('nl-'+p);
-    if(nl)nl.classList.remove('active');
+const PAGES=['home','process','inspect','equip','data','projects'];
+function go(id){
+  PAGES.forEach(p=>{
+    document.getElementById('page-'+p)?.classList.remove('on');
+    const nl=document.getElementById('nl-'+p);if(nl)nl.classList.remove('on');
   });
-  document.getElementById('page-'+id)?.classList.add('active');
-  const nl=document.getElementById('nl-'+id);
-  if(nl)nl.classList.add('active');
-  if(!skipScroll)window.scrollTo({top:0,behavior:'smooth'});
-  // init data page charts when navigating there
+  document.getElementById('page-'+id)?.classList.add('on');
+  const nl=document.getElementById('nl-'+id);if(nl)nl.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
   if(id==='data')initCharts();
-  // trigger reveal for active page
-  setTimeout(()=>revealAll(),100);
-  return false;
+  setTimeout(triggerReveal,120);return false;
 }
 function toggleMob(){document.getElementById('mobMenu').classList.toggle('open')}
 
-/* ── REVEAL ON SCROLL ── */
-function revealAll(){
+/* ── REVEAL ── */
+function triggerReveal(){
+  const active=PAGES.find(p=>document.getElementById('page-'+p)?.classList.contains('on'))||'home';
   const obs=new IntersectionObserver(entries=>{
     entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target)}});
-  },{threshold:.1});
-  document.querySelectorAll('#page-'+getCurrentPage()+' .reveal, #page-'+getCurrentPage()+' .proc-step').forEach(el=>{
+  },{threshold:.08});
+  document.querySelectorAll('#page-'+active+' .rv,#page-'+active+' .pstep').forEach(el=>{
     el.classList.remove('in');obs.observe(el);
   });
 }
-function getCurrentPage(){
-  for(const p of pages){if(document.getElementById('page-'+p)?.classList.contains('active'))return p}
-  return 'home';
-}
-// also run on home page load
-setTimeout(()=>revealAll(),200);
+setTimeout(triggerReveal,200);
 
 /* ── STAGE TABS ── */
-function showStage(id,btn){
-  document.querySelectorAll('.stage-panel').forEach(p=>p.classList.remove('on'));
+function showS(id,btn){
+  document.querySelectorAll('.spanel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('on'));
   document.getElementById('sp-'+id)?.classList.add('on');
   btn.classList.add('on');
 }
 
-/* ── ROUGHNESS BARS ── */
-function initRoughness(){
-  const data=[
-    {label:'Ra',val:0.08,max:.5,color:'#1a5e35'},
-    {label:'Rq',val:0.10,max:.5,color:'#1a4f7a'},
-    {label:'Rz',val:0.62,max:3,color:'#b83a0a'},
-    {label:'Rsk',val:-0.12,max:1,color:'#92560a'},
-    {label:'Rku',val:3.4,max:6,color:'#4a1a7a'},
-  ];
-  const wrap=document.getElementById('roughVis');
-  if(!wrap)return;
-  wrap.innerHTML='';
-  data.forEach(d=>{
-    const pct=Math.abs(d.val)/d.max*100;
-    wrap.innerHTML+=`
-    <div class="rq-row">
-      <div class="rq-label">${d.label}</div>
-      <div class="rq-bar-wrap"><div class="rq-bar" style="width:${pct}%;background:${d.color}"></div></div>
-      <div class="rq-val">${d.val.toFixed(2)} nm</div>
-    </div>`;
-  });
-}
-initRoughness();
-
-/* ── DEFECT MAP ── */
-function initDefectMap(){
-  const map=document.getElementById('defectMap');
-  if(!map)return;
-  map.innerHTML='';
-  const states=['clean','clean','clean','defect','clean','clean','marginal','clean','clean','clean'];
-  const colors={clean:'#1a6b3c',defect:'#b83a0a',marginal:'#92560a'};
-  const all=['clean','clean','clean','clean','clean','marginal','defect'];
-  for(let i=0;i<100;i++){
-    const s=all[Math.floor(Math.random()*all.length)];
+/* ── 3D WAFER DIE GRIDS ── */
+function buildWaferGrid(id){
+  const g=document.getElementById(id);if(!g)return;
+  g.innerHTML='';
+  const pool=['good','good','good','good','good','good','good','marginal','def','def'];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
     const el=document.createElement('div');
-    el.className='dm-cell';
-    el.style.background=colors[s];
-    el.style.opacity=s==='clean'?'.3':s==='marginal'?'.7':'1';
-    el.dataset.state=s;
-    el.onclick=function(){
-      const states=['clean','marginal','defect'];
-      const cur=states.indexOf(this.dataset.state);
-      const next=states[(cur+1)%3];
-      this.dataset.state=next;
-      this.style.background=colors[next];
-      this.style.opacity=next==='clean'?'.3':next==='marginal'?'.7':'1';
-    };
+    const dist=Math.sqrt((r-3.5)**2+(c-3.5)**2);
+    if(dist>3.8){el.className='wdie edge';}
+    else{
+      const s=pool[Math.floor(Math.random()*pool.length)];
+      el.className='wdie '+s;
+    }
+    g.appendChild(el);
+  }
+}
+buildWaferGrid('wdieGrid');
+buildWaferGrid('wdieGrid2');
+
+/* ── 3D DRAG ROTATE ── */
+function makeDraggable(sceneId,animEl){
+  const scene=document.getElementById(sceneId);
+  const el=document.getElementById(animEl);
+  if(!scene||!el)return;
+  let dragging=false,lastX=0,lastY=0,rotY=0,rotX=20;
+  scene.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;el.style.animation='none';scene.style.cursor='grabbing'});
+  window.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    rotY+=(e.clientX-lastX)*0.5;rotX-=(e.clientY-lastY)*0.3;
+    rotX=Math.max(-60,Math.min(60,rotX));
+    el.style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    lastX=e.clientX;lastY=e.clientY;
+  });
+  window.addEventListener('mouseup',()=>{dragging=false;scene.style.cursor='grab'});
+}
+makeDraggable('waferScene','wafer3d');
+makeDraggable('waferScene2','wafer3d2');
+
+/* ── BUILD GAA 3D ── */
+(function(){
+  const c=document.getElementById('gaaTrans');if(!c)return;
+  const colors={ns:'#6080c0',gate:'#888',ox:'rgba(255,200,80,.7)',sub:'#a0b0c0',sd:'#4898d0'};
+  // substrate
+  const sub=document.createElement('div');
+  Object.assign(sub.style,{position:'absolute',left:'20px',top:'165px',width:'240px',height:'22px',
+    background:'linear-gradient(to right,#8898a8,#b0c0d0,#8898a8)',border:'1px solid #6888a0',
+    borderRadius:'2px',boxShadow:'0 4px 12px rgba(0,0,0,.3)'});
+  c.appendChild(sub);
+  // 3 nanosheets
+  [130,105,80].forEach((top,i)=>{
+    const ns=document.createElement('div');
+    Object.assign(ns.style,{position:'absolute',left:'40px',top:top+'px',width:'200px',height:'12px',
+      background:`linear-gradient(to bottom,#7090d0,#5070b0,#7090d0)`,
+      border:'1px solid #4060a0',borderRadius:'3px'});
+    c.appendChild(ns);
+    // source side
+    const s1=document.createElement('div');
+    Object.assign(s1.style,{position:'absolute',left:'20px',top:(top-6)+'px',width:'28px',height:'24px',
+      background:'linear-gradient(to right,#2878c0,#4898e0)',border:'1px solid #1860a0',borderRadius:'3px'});
+    c.appendChild(s1);
+    // drain side
+    const s2=document.createElement('div');
+    Object.assign(s2.style,{position:'absolute',left:'232px',top:(top-6)+'px',width:'28px',height:'24px',
+      background:'linear-gradient(to right,#2878c0,#4898e0)',border:'1px solid #1860a0',borderRadius:'3px'});
+    c.appendChild(s2);
+  });
+  // gate metal wrap (visual only)
+  const gate=document.createElement('div');
+  Object.assign(gate.style,{position:'absolute',left:'108px',top:'68px',width:'64px',height:'115px',
+    background:'linear-gradient(to right,#707070,#b0b0b0,#707070)',
+    border:'1px solid #505050',borderRadius:'5px',opacity:'.85'});
+  c.appendChild(gate);
+  // oxide
+  const ox=document.createElement('div');
+  Object.assign(ox.style,{position:'absolute',left:'112px',top:'72px',width:'56px',height:'107px',
+    background:'rgba(255,200,80,.25)',border:'1px solid rgba(255,180,60,.4)',borderRadius:'3px'});
+  c.appendChild(ox);
+  // labels
+  [['S',28,118],['D',236,118],['Gate',130,55]].forEach(([t,l,top])=>{
+    const lb=document.createElement('div');
+    Object.assign(lb.style,{position:'absolute',left:l+'px',top:top+'px',
+      fontFamily:'IBM Plex Mono',fontSize:'9px',fontWeight:'600',color:'#54524d'});
+    lb.textContent=t;c.appendChild(lb);
+  });
+  const nl=document.createElement('div');
+  Object.assign(nl.style,{position:'absolute',left:'175px',top:'95px',
+    fontFamily:'IBM Plex Mono',fontSize:'7px',color:'#9e9b94'});
+  nl.innerHTML='Si nanosheet<br>3–5 nm thick';c.appendChild(nl);
+})();
+
+/* ── BUILD BEOL LAYER STACK 3D ── */
+(function(){
+  const c=document.getElementById('stack3d');if(!c)return;
+  const layers=[
+    {label:'SiN Passivation',bg:'#d0c8e0',top:20},{label:'RDL Cu (Power)',bg:'#d4a060',top:44},
+    {label:'M8 — Cu (Clock)',bg:'#c89040',top:68},{label:'M5–M7 — Cu+low-k',bg:'#b87030',top:92},
+    {label:'M3–M4 — Cu+air-gap',bg:'#a06028',top:116},{label:'M1–M2 — Cu+Co liner',bg:'#905020',top:140},
+    {label:'M0 — Ru contacts',bg:'#7a7a8a',top:164},{label:'PMD — SiO₂',bg:'#c0ccd8',top:188},
+    {label:'STI + Si substrate',bg:'#a8b8c8',top:212},
+  ];
+  layers.forEach(l=>{
+    const el=document.createElement('div');el.className='slayer';
+    Object.assign(el.style,{top:l.top+'px',background:l.bg,
+      boxShadow:'2px 3px 8px rgba(0,0,0,.15)'});
+    const lb=document.createElement('div');lb.className='slayer-label';
+    lb.textContent=l.label;el.appendChild(lb);
+    c.appendChild(el);
+  });
+})();
+
+/* ── BUILD EUV LITHO 3D ── */
+(function(){
+  const c=document.getElementById('litho3d');if(!c)return;
+  // reticle
+  const ret=document.createElement('div');ret.className='lbox';
+  Object.assign(ret.style,{left:'60px',top:'10px',width:'140px',height:'30px',
+    background:'linear-gradient(to bottom,#c8c0d8,#a0989c)',
+    border:'1px solid #8880a0',borderRadius:'3px',boxShadow:'0 2px 8px rgba(0,0,0,.2)'});
+  const rl=document.createElement('div');
+  Object.assign(rl.style,{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+    fontFamily:'IBM Plex Mono',fontSize:'8px',color:'#3e1672',fontWeight:'600'});
+  rl.textContent='EUV Reticle (NA=0.55)';ret.appendChild(rl);c.appendChild(ret);
+  // beam
+  const beam=document.createElement('div');beam.className='euv-beam';
+  Object.assign(beam.style,{position:'absolute',left:'120px',top:'40px',
+    width:'20px',height:'80px',background:'linear-gradient(to bottom,rgba(200,60,180,.6),rgba(100,30,180,.2))',
+    borderRadius:'0 0 8px 8px'});
+  c.appendChild(beam);
+  // resist layers
+  [['EUV Photoresist (MLD)',130,'rgba(200,180,255,.4)'],
+   ['SiO₂ Hard Mask',150,'rgba(200,220,240,.6)'],
+   ['Low-k ILD',170,'rgba(180,200,180,.5)'],
+   ['Silicon Substrate',192,'rgba(160,176,192,.8)']
+  ].forEach(([lab,top,bg])=>{
+    const el=document.createElement('div');el.className='lbox';
+    Object.assign(el.style,{left:'20px',top:top+'px',width:'220px',height:'18px',
+      background:bg,border:'1px solid rgba(0,0,0,.12)',borderRadius:'2px'});
+    const lb=document.createElement('div');
+    Object.assign(lb.style,{position:'absolute',top:'50%',left:'50%',
+      transform:'translate(-50%,-50%)',fontFamily:'IBM Plex Mono',fontSize:'7px',color:'#1a1a16'});
+    lb.textContent=lab;el.appendChild(lb);c.appendChild(el);
+  });
+  // patterned lines
+  [60,80,100,140,160,180].forEach(x=>{
+    const line=document.createElement('div');
+    Object.assign(line.style,{position:'absolute',left:x+'px',top:'130px',
+      width:'8px',height:'18px',background:'rgba(180,120,255,.7)',borderRadius:'1px'});
+    c.appendChild(line);
+  });
+  const plb=document.createElement('div');
+  Object.assign(plb.style,{position:'absolute',left:'40px',top:'152px',
+    fontFamily:'IBM Plex Mono',fontSize:'7px',color:'#c23b0c',fontWeight:'600'});
+  plb.textContent='8nm half-pitch pattern';c.appendChild(plb);
+})();
+
+/* ── ROUGHNESS BARS ── */
+(function(){
+  const data=[
+    {l:'Ra',v:0.08,m:.4,c:'#18572f'},{l:'Rq',v:0.10,m:.4,c:'#184c78'},
+    {l:'Rz',v:0.62,m:3,c:'#c23b0c'},{l:'Rsk',v:-0.11,m:1,c:'#8a5008'},
+    {l:'Rku',v:3.1,m:6,c:'#3e1672'}
+  ];
+  const w=document.getElementById('roughBars');if(!w)return;
+  w.innerHTML='';
+  data.forEach(d=>{
+    const pct=Math.abs(d.v)/d.m*100;
+    const row=document.createElement('div');row.className='rbrow';
+    row.innerHTML=`<div class="rblabel">${d.l}</div>
+      <div class="rbwrap"><div class="rbbar" style="width:0%;background:${d.c}" data-w="${pct}"></div></div>
+      <div class="rbval">${d.v.toFixed(2)} nm</div>`;
+    w.appendChild(row);
+  });
+  setTimeout(()=>document.querySelectorAll('.rbbar').forEach(b=>b.style.width=b.dataset.w+'%'),400);
+})();
+
+/* ── WAFER MAP ── */
+(function(){
+  const map=document.getElementById('waferMap');if(!map)return;
+  map.innerHTML='';
+  const cl={good:[var_css('--green'),'0.4'],defect:[var_css('--red'),'1'],
+    marginal:[var_css('--amber'),'0.85'],edge:[var_css('--border'),'1']};
+  const states=['good','marginal','defect'];
+  for(let r=0;r<12;r++)for(let c=0;c<12;c++){
+    const el=document.createElement('div');el.className='wfc';
+    const dist=Math.sqrt((r-5.5)**2+(c-5.5)**2);
+    if(dist>5.5){
+      el.style.background=cl.edge[0];el.style.opacity=cl.edge[1];el.style.cursor='default';
+    } else {
+      const pool=['good','good','good','good','good','good','marginal','defect'];
+      let s=pool[Math.floor(Math.random()*pool.length)];
+      el.dataset.s=s;
+      el.style.background=cl[s][0];el.style.opacity=cl[s][1];
+      el.onclick=function(){
+        const cur=states.indexOf(this.dataset.s);
+        const nxt=states[(cur+1)%3];
+        this.dataset.s=nxt;
+        this.style.background=cl[nxt][0];
+        this.style.opacity=cl[nxt][1];
+      };
+    }
     map.appendChild(el);
   }
-}
-initDefectMap();
+  function var_css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+})();
+function var_css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
 
 /* ── CHARTS ── */
-let chartsInited=false;
+let chartsReady=false;
 function initCharts(){
-  if(chartsInited)return;
-  chartsInited=true;
-
-  const gOpts={
-    responsive:true,maintainAspectRatio:false,
+  if(chartsReady)return;chartsReady=true;
+  const base={responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false}},
-    scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:'#9a9990'}},
-            y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:'#9a9990'}}}
-  };
+    scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}},
+            y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}}}};
 
-  // XRD
-  const xrdCtx=document.getElementById('xrdChart');
-  if(xrdCtx){
-    const angles=[20,22,24,25,26,27,28,29,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70];
-    // Si(100) peak at 2θ ≈ 28.4° (Kα)
-    const intensity=angles.map(a=>{
-      const peak1=5000*Math.exp(-0.5*((a-28.4)/0.3)**2);
-      const noise=Math.random()*30+5;
-      return Math.round(peak1+noise);
-    });
-    new Chart(xrdCtx,{type:'line',data:{labels:angles.map(a=>a+'°'),datasets:[{data:intensity,borderColor:'#b83a0a',borderWidth:1.5,fill:true,backgroundColor:'rgba(184,58,10,.08)',pointRadius:0,tension:.3}]},options:{...gOpts,scales:{...gOpts.scales,x:{...gOpts.scales.x,title:{display:true,text:'2θ (degrees)',font:{family:"IBM Plex Mono",size:9},color:'#9a9990'}},y:{...gOpts.scales.y,title:{display:true,text:'Intensity (counts)',font:{family:"IBM Plex Mono",size:9},color:'#9a9990'}}}}});
-  }
+  // XRD — Si(100) + SiGe epi layer
+  const ang=Array.from({length:30},(_,i)=>20+i*2);
+  const xrdI=ang.map(a=>{
+    const p1=250*Math.exp(-0.5*((a-28.4)/.4)**2); // Si(200) forbidden / multiple scattering
+    const p2=8800*Math.exp(-0.5*((a-69.1)/.5)**2); // Si(400)
+    const p3=380*Math.exp(-0.5*((a-65.8)/.6)**2);  // SiGe(400) peak shifted by Ge 25%
+    return Math.round(p1+p2+p3+Math.random()*18+8);
+  });
+  new Chart(document.getElementById('xrdC'),{
+    type:'line',data:{labels:ang.map(a=>a+'°'),datasets:[{data:xrdI,
+      borderColor:'#c23b0c',borderWidth:1.5,fill:true,
+      backgroundColor:'rgba(194,59,12,.07)',pointRadius:0,tension:.3}]},
+    options:{...base,plugins:{...base.plugins,
+      annotation:{annotations:{si:{type:'line',xMin:'69°',xMax:'69°',borderColor:'rgba(24,87,47,.5)',borderWidth:1}}}},
+    scales:{...base.scales,
+      x:{...base.scales.x,title:{display:true,text:'2θ (degrees)',font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}},
+      y:{...base.scales.y,title:{display:true,text:'Intensity (counts)',font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}}}}});
 
-  // Defect density bar
-  const defCtx=document.getElementById('defectChart');
-  if(defCtx){
-    new Chart(defCtx,{type:'bar',data:{
-      labels:['Wafer Prep','FEOL','MEOL','BEOL','Packaging'],
-      datasets:[{data:[0.08,0.45,0.31,0.52,0.28],backgroundColor:['rgba(26,94,53,.7)','rgba(184,58,10,.7)','rgba(26,79,122,.7)','rgba(74,26,122,.7)','rgba(146,86,10,.7)'],borderRadius:4,borderWidth:0}]
-    },options:{...gOpts,scales:{...gOpts.scales,y:{...gOpts.scales.y,title:{display:true,text:'Defects/cm²',font:{family:"IBM Plex Mono",size:9},color:'#9a9990'}}}}});
-  }
+  // Defect density by stage — 2nm node targets
+  new Chart(document.getElementById('defC'),{
+    type:'bar',data:{
+      labels:['Bare Wafer','Post-STI','FEOL Litho','MEOL','BEOL M1–M3','BEOL M4+'],
+      datasets:[{data:[0.04,0.12,0.38,0.22,0.44,0.18],
+        backgroundColor:['rgba(26,87,47,.65)','rgba(26,76,120,.55)','rgba(194,59,12,.7)',
+          'rgba(24,76,120,.65)','rgba(194,59,12,.5)','rgba(62,22,114,.6)'],
+        borderRadius:4,borderWidth:0}]},
+    options:{...base,scales:{...base.scales,
+      y:{...base.scales.y,title:{display:true,text:'Defects / cm²',font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}}}}});
 
   // Roughness vs CMP time
-  const rCtx=document.getElementById('roughChart');
-  if(rCtx){
-    const t=[0,10,20,30,40,50,60,70,80,90,100,110,120];
-    const ra=t.map(x=>Math.max(0.06,1.8*Math.exp(-x/35)+0.06+(Math.random()-.5)*.04));
-    new Chart(rCtx,{type:'line',data:{labels:t.map(x=>x+'s'),datasets:[{data:ra.map(v=>+v.toFixed(3)),borderColor:'#1a4f7a',borderWidth:1.5,fill:true,backgroundColor:'rgba(26,79,122,.08)',pointRadius:0,tension:.4}]},options:{...gOpts,scales:{...gOpts.scales,y:{...gOpts.scales.y,title:{display:true,text:'Ra (nm)',font:{family:"IBM Plex Mono",size:9},color:'#9a9990'},min:0}}}});
-  }
+  const t=Array.from({length:14},(_,i)=>i*10);
+  const ra=t.map(x=>+(Math.max(0.07,2.1*Math.exp(-x/28)+0.07+(Math.random()-.5)*.04)).toFixed(3));
+  new Chart(document.getElementById('rghC'),{
+    type:'line',data:{labels:t.map(x=>x+'s'),datasets:[{data:ra,
+      borderColor:'#0e5c5c',borderWidth:1.5,fill:true,
+      backgroundColor:'rgba(14,92,92,.07)',pointRadius:2,
+      pointBackgroundColor:'#0e5c5c',tension:.4}]},
+    options:{...base,scales:{...base.scales,
+      y:{...base.scales.y,min:0,title:{display:true,text:'Ra (nm)',font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}}}}});
 
-  // Yield vs D0
-  const yCtx=document.getElementById('yieldChart');
-  if(yCtx){
-    const d0=Array.from({length:20},(_,i)=>+(i*0.1).toFixed(1));
-    const area=0.5; // cm²
-    const y=d0.map(d=>+( Math.exp(-d*area)*100).toFixed(1));
-    new Chart(yCtx,{type:'line',data:{labels:d0.map(d=>d+'/cm²'),datasets:[{data:y,borderColor:'#1a5e35',borderWidth:1.5,fill:true,backgroundColor:'rgba(26,94,53,.08)',pointRadius:0,tension:.3}]},options:{...gOpts,scales:{...gOpts.scales,y:{...gOpts.scales.y,title:{display:true,text:'Yield (%)',font:{family:"IBM Plex Mono",size:9},color:'#9a9990'},min:0,max:100}}}});
-  }
+  // Yield vs D0 — 2nm node die size 100mm²
+  const d0=Array.from({length:21},(_,i)=>+(i*0.025).toFixed(3));
+  const area=1.0; // cm²
+  const yld=d0.map(d=>+(Math.exp(-d*area)*100).toFixed(1));
+  new Chart(document.getElementById('yldC'),{
+    type:'line',data:{labels:d0.map(d=>d.toFixed(3)+'/cm²'),datasets:[{data:yld,
+      borderColor:'#18572f',borderWidth:1.5,fill:true,
+      backgroundColor:'rgba(24,87,47,.07)',pointRadius:0,tension:.3}]},
+    options:{...base,scales:{...base.scales,
+      y:{...base.scales.y,min:0,max:100,title:{display:true,text:'Yield (%)',font:{family:"IBM Plex Mono",size:8},color:'#9e9b94'}},
+      x:{...base.scales.x,ticks:{...base.scales.x.ticks,maxTicksLimit:8}}}}});
 }
 </script>
 </body>
